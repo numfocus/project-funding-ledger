@@ -83,9 +83,9 @@ Detailed contribution guidelines will be added as the project develops.
 
 ## License
 
-This project is intended to be open source.
+Project Funding Ledger is licensed under the BSD 3-Clause License.
 
-The project license will be selected and published before the repository is opened for public contribution.
+See the LICENSE file for details.
 
 ## About NumFOCUS
 
