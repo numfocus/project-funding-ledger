@@ -34,6 +34,10 @@ The PFL is being designed to provide:
 - Transparent financial activity
 - Complete audit history
 
+## System Overview
+
+![Three Core Financial Systems](docs/images/three-core-financial-systems.png)
+
 ## Project Status
 
 The Project Funding Ledger is currently in the architecture and design phase.
