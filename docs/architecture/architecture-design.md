@@ -27,12 +27,12 @@ The following table summarizes the purpose of each document.
 
 > Document Definition
 
-| **Document** | **Purpose** |
-|----|----|
-| NumFOCUS PFL - 1 Functional Specification | Defines the business requirements, functional capabilities, user workflows, and reporting requirements. |
-| NumFOCUS PFL - 2 Development Roadmap and Implementation Strategy | Defines the overall implementation strategy, development phases, milestones, and project sequencing. (This document.) |
-| NumFOCUS PFL – 3 Architecture Design | Defines the system architecture, database design, security model, data model, integrations, and technical design decisions. |
-| NumFOCUS PFL - 4 Development Plan | Defines the detailed implementation tasks, coding standards, repository structure, development environment, testing procedures, deployment process, and other developer guidance. |
+| Document                                                                                 | Purpose                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[Functional Specification](../functional-specification/functional-specification.md)**  | Defines the business requirements, functional capabilities, user workflows, and reporting requirements.                                                                           |
+| **[Development Roadmap and Implementation Strategy](../roadmap/development-roadmap.md)** | Defines the overall implementation strategy, development phases, milestones, and project sequencing. *(This document.)*                                                           |
+| **[Architecture Design](../architecture/architecture-design.md)**                        | Defines the system architecture, database design, security model, data model, integrations, and technical design decisions.                                                       |
+| **[Development Plan](../development/development-plan.md)**                               | Defines the detailed implementation tasks, coding standards, repository structure, development environment, testing procedures, deployment process, and other developer guidance. |
 
 ## 
 
@@ -224,63 +224,50 @@ overview rather than a detailed database schema.
 
 Project
 
-│
+## 2.2.9 Conceptual Business Entity Hierarchy
 
-├── Funding Source
+*This is a conceptual hierarchy, not a database schema.*
 
-│ ├── Financial Transaction
+The following diagram illustrates the primary organization of the Project Funding Ledger's core business entities and their high-level relationships. It provides an architectural overview rather than a detailed database schema.
 
-│ ├── Funding Adjustment
+```mermaid
+flowchart TD
+    Project[Project]
 
-│ └── Governing Agreement
+    Project --> FundingSource[Funding Source]
+    Project --> ProjectAgreement[Governing Agreement]
+    Project --> ProjectObligation[Reporting Obligation]
+    Project --> Governance[Project Governance]
+    Project --> Permission[Project Permission]
 
-│ └── Reporting Obligation
+    FundingSource --> Transaction[Financial Transaction]
+    FundingSource --> Adjustment[Funding Adjustment]
+    FundingSource --> FundingAgreement[Governing Agreement]
 
-│
+    FundingAgreement --> FundingObligation[Reporting Obligation]
+    ProjectAgreement --> AgreementObligation[Reporting Obligation]
 
-├── Governing Agreement
+    Permission --> UserProfile[User Profile]
 
-│ └── Reporting Obligation
+    SupportingDocument[Supporting Document] --> Project
+    SupportingDocument --> FundingSource
+    SupportingDocument --> ProjectAgreement
+    SupportingDocument --> ProjectObligation
+    SupportingDocument --> Governance
 
-├── Reporting Obligation
+    ImportBatch[Import Batch] -->|imports| Transaction
+    ImportBatch -->|uses| MappingRule[Mapping Rule]
+    ImportBatch -->|produces| MappingException[Mapping Exception]
 
-├── Project Governance
+    AuditLog[Audit Log] -->|records changes to| Project
+    AuditLog -->|records changes to| FundingSource
+    AuditLog -->|records changes to| Transaction
+    AuditLog -->|records changes to| Adjustment
+    AuditLog -->|records changes to| ProjectAgreement
+    AuditLog -->|records changes to| ProjectObligation
+    AuditLog -->|records changes to| Governance
+```
 
-│
-
-├──────────────┐
-
-│ │
-
-Project Permission │
-
-│ │
-
-└────────► User Profile
-
-Supporting Document
-
-├────► Project
-
-├────► Funding Source
-
-├────► Governing Agreement
-
-├────► Reporting Obligation
-
-└────► Project Governance
-
-Import Batch
-
-├── imports Financial Transactions
-
-├── uses Mapping Rules
-
-└── produces Mapping Exceptions
-
-Audit Log
-
-└── records changes to Core Business Entities
 
 The PFL is organized around the Project as the primary organizational
 and security boundary. Most core business entities belong directly to a
