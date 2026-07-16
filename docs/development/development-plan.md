@@ -1,8 +1,8 @@
 # 1 Introduction 
 
-1.  **Purpose**
+## 1.1 Purpose
 
-The NumFOCUS **Project Funding Ledger (PFL) Development Plan** defines
+**Project Funding Ledger (PFL) Development Plan** defines
 the software engineering practices for developing, testing, deploying,
 and maintaining the PFL application. It describes the development
 environment, repository organization, coding standards, testing

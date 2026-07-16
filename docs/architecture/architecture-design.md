@@ -1,7 +1,7 @@
 # 1. Introduction 
 
 ## 1.1 Purpose
-The NumFOCUS Project Funding Ledger (PFL) Architecture Design document
+The Project Funding Ledger (PFL) Architecture Design document
 defines the technical architecture of the PFL application. It describes
 the system architecture, technology stack, application components,
 security architecture, database design, data model, integration
