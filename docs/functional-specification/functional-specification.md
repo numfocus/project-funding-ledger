@@ -79,25 +79,19 @@ design, development, testing, and support of the PFL.
 
 ## 1.4 Relationship to Other Project Documentation
 
-The PFL documentation is organized into complementary documents, each
-serving a distinct purpose.
+The Project Funding Ledger (PFL) documentation is organized into complementary documents, each serving a distinct purpose.
 
-This Functional Specification defines the business capabilities, user
-requirements, business rules, and functional behavior of the PFL. It
-focuses on what the application must do to meet business objectives.
+This **Functional Specification** defines the business capabilities, user requirements, business rules, and functional behavior of the PFL. It describes **what** the application must do to meet the needs of NumFOCUS staff, fiscally sponsored projects, and other stakeholders.
 
-The Design Specification translates those business requirements into the
-logical system design, including the application architecture, business
-entity model, database design, integration strategy, security model, and
-other technical design decisions.
+The **Architecture Design** translates those business requirements into the system's technical architecture, including the business entity model, database design, security model, integration strategy, and other technical design decisions. It describes **how** the system is designed to satisfy the functional requirements.
 
-The Development Standards define the engineering practices used during
-implementation, including coding standards, testing strategy, deployment
-processes, security requirements, and documentation standards.
+The **Development Plan** defines how the application will be implemented, including the development environment, repository organization, coding standards, testing approach, deployment process, and other guidance for contributors.
 
-Together, these documents provide a complete description of the PFL
-while maintaining a clear separation between business requirements,
-system design, and software implementation.
+The **Development Roadmap & Implementation Strategy** defines the overall implementation approach, project phases, milestones, priorities, and sequencing used to guide the evolution of the Project Funding Ledger from initial development through production deployment.
+
+Together, these documents provide a complete description of the Project Funding Ledger while maintaining a clear separation between business requirements, technical architecture, implementation planning, and development execution.
+
+The following table summarizes the purpose of each document.
 
 > Document Definition
 

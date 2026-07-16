@@ -19,9 +19,11 @@ application.
 The PFL documentation is organized into four complementary documents
 that collectively define the business requirements, implementation
 strategy, technical architecture, and software development approach for
-the application. Together, these documents provide a complete
-specification for the PFL, from business requirements through technical
-implementation.
+the application. 
+
+Together, these documents provide a complete description of the PFL
+while maintaining a clear separation between business requirements,
+system design, and software implementation.
 
 The following table summarizes the purpose of each document.
 
@@ -52,7 +54,7 @@ separately.
 
 # 2. System Architecture
 
-The NumFOCUS Project Funding Ledger (PFL) is a web-based application
+The Project Funding Ledger (PFL) is a web-based application
 that provides centralized management and visibility of Project funding
 information for NumFOCUS. The application uses a Supabase/PostgreSQL
 backend together with a browser-based user interface. It combines
@@ -269,7 +271,6 @@ flowchart TD
     AuditLog -->|records changes to| ProjectObligation
     AuditLog -->|records changes to| Governance
 ```
-
 
 The PFL is organized around the Project as the primary organizational
 and security boundary. Most core business entities belong directly to a

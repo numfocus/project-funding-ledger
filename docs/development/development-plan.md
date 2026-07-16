@@ -20,13 +20,14 @@ effective collaboration among project contributors.
 The PFL documentation is organized into four complementary documents
 that collectively define the business requirements, implementation
 strategy, technical architecture, and software development approach for
-the application. Together, these documents provide a complete
-specification for the PFL, from business requirements through technical
-implementation.
+the application. 
 
-The following table summarizes the purpose of each document..
+Together, these documents provide a complete description of the PFL
+while maintaining a clear separation between business requirements,
+system design, and software implementation.
 
-Document Definition
+The following table summarizes the purpose of each document.
+
 > Document Definition
 
 | Document                                                                                 | Purpose                                                                                                                                                                           |
@@ -143,22 +144,15 @@ design intent as the application evolves.
 
 ## 2.3 Open Source Licensing
 
-The Project Funding Ledger is intended to be released under an approved
-open source license selected by NumFOCUS.
+The Project Funding Ledger is licensed under the **BSD 3-Clause License**.
 
-All third-party libraries, frameworks, and other software dependencies
-incorporated into the application shall be compatible with the project's
-selected open source license.
+All source code, documentation, and other project artifacts contributed to the repository are governed by the terms of the BSD 3-Clause License unless otherwise noted.
 
-Contributors should make reasonable efforts to identify the licensing of
-external software components included in their contributions. Project
-maintainers are responsible for reviewing and approving dependencies to
-ensure continued compliance with the project's licensing requirements.
+All third-party libraries, frameworks, and other software dependencies incorporated into the application must be compatible with the BSD 3-Clause License or otherwise approved by the project maintainers.
 
-The inclusion of third-party software should be limited to dependencies
-that provide clear value to the project. Preference should be given to
-mature, well-maintained, widely adopted open source libraries with
-active communities and compatible licensing.
+Contributors should make reasonable efforts to understand the licensing terms of external software components included in their contributions. Project maintainers are responsible for reviewing and approving dependencies to ensure continued compliance with the project's licensing requirements.
+
+The inclusion of third-party software should be limited to dependencies that provide clear value to the project. Preference should be given to mature, well-maintained, widely adopted open source projects with active communities, permissive licensing, and long-term maintenance prospects.
 
 ## 2.4 AI-Assisted Development
 
