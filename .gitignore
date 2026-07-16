@@ -1,0 +1,28 @@
+# macOS
+.DS_Store
+
+# VS Code
+.vscode/
+
+# JetBrains IDEs
+.idea/
+
+# Logs
+*.log
+
+# Environment variables
+.env
+.env.*
+
+# Node
+node_modules/
+
+# Build output
+dist/
+build/
+
+# Supabase
+.supabase/
+
+# OS files
+Thumbs.db
