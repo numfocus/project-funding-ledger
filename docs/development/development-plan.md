@@ -27,13 +27,14 @@ implementation.
 The following table summarizes the purpose of each document..
 
 Document Definition
+> Document Definition
 
-| Document | Purpose |
-|----|----|
-| NumFOCUS PFL - 1 Functional Specification | Defines the business requirements, functional capabilities, user workflows, and reporting requirements. |
-| NumFOCUS PFL - 2 Development Roadmap and Implementation Strategy | Defines the overall implementation strategy, development phases, milestones, and project sequencing. (This document.) |
-| NumFOCUS PFL – 3 Architecture Design | Defines the system architecture, database design, security model, data model, integrations, and technical design decisions. |
-| NumFOCUS PFL - 4 Development Plan | Defines the detailed implementation tasks, coding standards, repository structure, development environment, testing procedures, deployment process, and other developer guidance. |
+| Document                                                                                 | Purpose                                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **[Functional Specification](../functional-specification/functional-specification.md)**  | Defines the business requirements, functional capabilities, user workflows, and reporting requirements.                                                                           |
+| **[Development Roadmap and Implementation Strategy](../roadmap/development-roadmap.md)** | Defines the overall implementation strategy, development phases, milestones, and project sequencing. *(This document.)*                                                           |
+| **[Architecture Design](../architecture/architecture-design.md)**                        | Defines the system architecture, database design, security model, data model, integrations, and technical design decisions.                                                       |
+| **[Development Plan](../development/development-plan.md)**                               | Defines the detailed implementation tasks, coding standards, repository structure, development environment, testing procedures, deployment process, and other developer guidance. |
 
 ## 
 
