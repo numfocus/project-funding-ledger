@@ -113,11 +113,11 @@ The PFL architecture is based on the following principles:
 
 8.  The Project Funding Ledger provides a point-in-time operational view
     of available Project funding. It is not an accounting system and
-    does not replace the financial systems of record. See Figure 1.
+    does not replace the financial systems of record. 
 
-## <img src="images/three-core-financial-systems.png"
+<img src="../images/three-core-financial-systems.png"
      alt="Three Core Financial Systems"
-     style="width:9in;height:5.06in">
+     style="width:9in;height:5.06in" />
 
 ## 2.2 High-Level System Components
 
