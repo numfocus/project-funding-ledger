@@ -192,8 +192,8 @@ software components:
 | Visual Studio Code (or comparable IDE) | Primary development environment |
 | Git | Source control |
 | GitHub | Source code repository and collaboration |
-| Node.js (Current LTS) | JavaScript runtime |
-| npm | Package management |
+| Python (3.12 or newer) | Python runtime |
+| uv | Package management |
 | Supabase CLI | Local Supabase development and database management |
 | PostgreSQL | Local database platform (when applicable) |
 | Modern Web Browser | Application testing and debugging |
@@ -214,7 +214,7 @@ onboarding, testing, and collaboration.
 
 The local development environment should support:
 
-- Local execution of the Next.js application
+- Local execution of the Flask & Jinja2 application
 
 - Local Supabase services
 

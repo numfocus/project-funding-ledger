@@ -91,7 +91,7 @@ increments rather than as a single large development effort.
 ## 2.1 Milestone 1: Project Repository and Development Environment
 
 Establish the GitHub repository, development standards, local
-development environment, Supabase project, initial Next.js application
+development environment, Supabase project, initial Flask & Jinja2 application
 shell, environment variable structure, and basic deployment approach.
 
 ## 2.2 Milestone 2: Database Foundation

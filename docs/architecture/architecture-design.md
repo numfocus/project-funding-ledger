@@ -469,9 +469,9 @@ adopted open technologies.
 
 | **Layer**       | **Technology**                      |
 |-----------------|-------------------------------------|
-| Web Application | Next.js or equivalent               |
-| UI Framework    | React or equivalent                 |
-| Language        | TypeScript or equivalent            |
+| Web Application | Flask & Jinja2                      |
+| UI Framework    | Jinja2 Templates                    |
+| Language        | Python                              |
 | Styling         | Tailwind CSS or equivalent          |
 | Backend         | Supabase                            |
 | Database        | PostgreSQL                          |
