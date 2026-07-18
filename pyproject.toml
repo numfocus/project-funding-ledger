@@ -1,0 +1,9 @@
+[project]
+name = "project-funding-ledger"
+version = "0.1.0"
+description = "The Project Funding Ledger (PFL) is an open source funding visibility and governance platform designed for fiscally sponsored organizations."
+readme = "README.md"
+requires-python = ">=3.14"
+dependencies = [
+    "flask>=3.1.3",
+]
