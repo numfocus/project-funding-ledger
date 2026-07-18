@@ -8,8 +8,20 @@ Install `uv`.
 
 Install `just`.
 
-Run the development server:
+Install Node.js and [Supabase](https://supabase.com/docs/guides/local-development).
+
+Install Docker.
+
+Create a development env file.
 
 ```
-uv run dev
+cp .env.example .env
+```
+
+Edit the `.env` file to include the `Publishable` key from the `npx supabase status` command.
+
+Run the supabase local development server and the flask development server:
+
+```
+just dev
 ```

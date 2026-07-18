@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+
+{% block title %}User Profile | Project Funding Ledger{% endblock %}
+
+{% block content %}
+<div class="card" id="profile-card">
+    <div class="card-header">
+        <h1 class="brand-title" id="profile-title">User Profile</h1>
+        <p class="brand-subtitle" id="profile-subtitle">Manage your personal account settings</p>
+    </div>
+    
+    <div class="profile-info-grid" id="profile-details">
+        <div class="info-item" id="info-email">
+            <div class="info-label">Email Address</div>
+            <div class="info-value">{{ user_profile.email }}</div>
+        </div>
+        
+        <div class="info-item" id="info-roles">
+            <div class="info-label">Roles & Status</div>
+            <div style="display: flex; gap: 8px; margin-top: 6px;">
+                <span class="badge badge-role" id="role-badge">{{ user_profile.user_type }}</span>
+                <span class="badge badge-active" id="status-badge">{{ user_profile.status }}</span>
+            </div>
+        </div>
+    </div>
+    
+    <form method="POST" action="{{ url_for('profile.profile_page') }}" id="profile-form">
+        <div class="form-group">
+            <label class="form-label" for="fullname-input">Full Name</label>
+            <input type="text" name="full_name" id="fullname-input" class="form-input" value="{{ user_profile.full_name }}" required autocomplete="name">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="organization-input">Organization Affiliation</label>
+            <input type="text" name="organization" id="organization-input" class="form-input" value="{{ user_profile.organization_affiliation or '' }}" placeholder="None" autocomplete="organization">
+        </div>
+        
+        <div class="action-row" style="margin-top: 24px;">
+            <button type="submit" class="btn btn-primary" id="save-btn">Save Changes</button>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger" id="logout-btn">Log Out</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
