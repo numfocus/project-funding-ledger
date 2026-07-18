@@ -29,11 +29,7 @@
             <label class="form-label" for="fullname-input">Full Name</label>
             <input type="text" name="full_name" id="fullname-input" class="form-input" value="{{ user_profile.full_name }}" required autocomplete="name">
         </div>
-        
-        <div class="form-group">
-            <label class="form-label" for="organization-input">Organization Affiliation</label>
-            <input type="text" name="organization" id="organization-input" class="form-input" value="{{ user_profile.organization_affiliation or '' }}" placeholder="None" autocomplete="organization">
-        </div>
+
         
         <div class="action-row" style="margin-top: 24px;">
             <button type="submit" class="btn btn-primary" id="save-btn">Save Changes</button>

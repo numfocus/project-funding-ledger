@@ -18,20 +18,17 @@ def profile_page():
         
     if request.method == 'POST':
         full_name = request.form.get('full_name')
-        organization = request.form.get('organization')
         
         try:
             # Update user profile in PostgreSQL database via Supabase client
             client.table('user_profile').update({
-                'full_name': full_name,
-                'organization_affiliation': organization
+                'full_name': full_name
             }).eq('auth_user_id', user.id).execute()
             
             # Also update user metadata in Supabase Auth
             client.auth.update_user({
                 "data": {
-                    "full_name": full_name,
-                    "organization_affiliation": organization
+                    "full_name": full_name
                 }
             })
             
@@ -52,7 +49,6 @@ def profile_page():
         user_profile = {
             'email': user.email,
             'full_name': user.user_metadata.get('full_name', 'N/A'),
-            'organization_affiliation': user.user_metadata.get('organization_affiliation', 'N/A'),
             'user_type': 'Project Stakeholder',
             'status': 'Active'
         }

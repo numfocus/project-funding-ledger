@@ -6,7 +6,6 @@ create table public.user_profile (
     auth_user_id uuid not null unique references auth.users(id) on delete cascade,
     full_name text not null,
     email text not null,
-    organization_affiliation text,
     user_type text not null check (user_type in (
         'System Administrator',
         'Program Manager',
@@ -64,7 +63,7 @@ begin
           and status = 'Active'
     );
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 create or replace function public.is_system_admin()
 returns boolean as $$
@@ -77,7 +76,7 @@ begin
           and status = 'Active'
     );
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 -- RLS Policies
 create policy "Allow select for self or admin/manager"
@@ -142,7 +141,7 @@ begin
     );
     return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 create trigger on_auth_user_created
     after insert on auth.users

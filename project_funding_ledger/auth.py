@@ -28,7 +28,6 @@ def login():
                             'auth_user_id': res.user.id,
                             'full_name': res.user.user_metadata.get('full_name', 'New User'),
                             'email': email,
-                            'organization_affiliation': res.user.user_metadata.get('organization_affiliation'),
                             'user_type': 'Project Stakeholder',
                             'status': 'Active'
                         }).execute()
