@@ -7,7 +7,8 @@ profile_bp = Blueprint('profile', __name__)
 def profile_page():
     client = get_supabase_client()
     try:
-        user = client.auth.get_user()
+        user_response = client.auth.get_user()
+        user = user_response.user if user_response else None
     except Exception:
         user = None
         

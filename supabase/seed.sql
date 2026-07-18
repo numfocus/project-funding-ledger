@@ -33,7 +33,14 @@ begin
         raw_app_meta_data,
         raw_user_meta_data,
         created_at,
-        updated_at
+        updated_at,
+        confirmation_token,
+        recovery_token,
+        email_change_token_new,
+        email_change,
+        phone_change_token,
+        email_change_token_current,
+        reauthentication_token
     ) values (
         v_admin_id,
         '00000000-0000-0000-0000-000000000000',
@@ -45,7 +52,14 @@ begin
         '{"provider":"email","providers":["email"]}',
         '{"full_name": "System Admin"}',
         now(),
-        now()
+        now(),
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
     );
 
     insert into auth.identities (
@@ -80,7 +94,14 @@ begin
         raw_app_meta_data,
         raw_user_meta_data,
         created_at,
-        updated_at
+        updated_at,
+        confirmation_token,
+        recovery_token,
+        email_change_token_new,
+        email_change,
+        phone_change_token,
+        email_change_token_current,
+        reauthentication_token
     ) values (
         v_manager_id,
         '00000000-0000-0000-0000-000000000000',
@@ -92,7 +113,14 @@ begin
         '{"provider":"email","providers":["email"]}',
         '{"full_name": "Program Manager"}',
         now(),
-        now()
+        now(),
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
     );
 
     insert into auth.identities (

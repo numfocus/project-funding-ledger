@@ -49,6 +49,9 @@ create trigger update_user_profile_updated_at
 -- Enable Row-Level Security
 alter table public.user_profile enable row level security;
 
+-- Grant permissions to standard roles
+grant select, insert, update, delete on table public.user_profile to authenticated, service_role;
+
 -- Helper functions for RLS to prevent recursion
 create or replace function public.is_admin_or_manager()
 returns boolean as $$

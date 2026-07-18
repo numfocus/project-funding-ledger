@@ -20,6 +20,12 @@ cp .env.example .env
 
 Edit the `.env` file to include the `Publishable` key from the `npx supabase status` command.
 
+First time only or if you change the seed data, populate the database:
+
+```
+npx supabase db reset
+```
+
 Run the supabase local development server and the flask development server:
 
 ```
