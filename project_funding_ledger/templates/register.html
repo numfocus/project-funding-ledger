@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+
+{% block title %}Register | Project Funding Ledger{% endblock %}
+
+{% block content %}
+<div class="card" id="register-card">
+    <div class="card-header">
+        <h1 class="brand-title" id="register-title">Project Funding Ledger</h1>
+        <p class="brand-subtitle" id="register-subtitle">Register your account</p>
+    </div>
+    
+    {% if not verified_email %}
+    <!-- Step 1: Check Invite -->
+    <form method="POST" action="{{ url_for('auth.register') }}" id="check-invite-form">
+        <input type="hidden" name="action" value="check_invite">
+        <div class="form-group">
+            <label class="form-label" for="email-input">Enter Invited Email</label>
+            <input type="email" name="email" id="email-input" class="form-input" placeholder="name@example.com" required autocomplete="email">
+        </div>
+        <button type="submit" class="btn btn-primary" id="check-invite-submit-btn">Verify Invitation</button>
+    </form>
+    {% else %}
+    <!-- Step 2: Complete Registration -->
+    <form method="POST" action="{{ url_for('auth.register') }}" id="register-form">
+        <input type="hidden" name="action" value="complete_registration">
+        <input type="hidden" name="email" value="{{ verified_email }}">
+        
+        <div class="form-group">
+            <label class="form-label">Email Address</label>
+            <input type="email" class="form-input" value="{{ verified_email }}" disabled>
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="fullname-input">Full Name</label>
+            <input type="text" name="full_name" id="fullname-input" class="form-input" placeholder="John Doe" required autocomplete="name">
+        </div>
+        
+        <div class="form-group">
+            <label class="form-label" for="password-input">Password</label>
+            <input type="password" name="password" id="password-input" class="form-input" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+
+        <div class="form-group">
+            <label class="form-label" for="confirm-password-input">Confirm Password</label>
+            <input type="password" name="confirm_password" id="confirm-password-input" class="form-input" placeholder="••••••••" required autocomplete="new-password">
+        </div>
+        
+        <button type="submit" class="btn btn-primary" id="register-submit-btn">Register</button>
+    </form>
+    {% endif %}
+    
+    <div class="card-footer" id="register-footer">
+        <a href="{{ url_for('auth.login') }}" id="login-link">Already registered? Sign In.</a>
+    </div>
+</div>
+{% endblock %}

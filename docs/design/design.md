@@ -16,7 +16,7 @@ underlying data model or business requirements.
 | ------------------------------------------------------------------------------------------------ | ------------------- | -------- |
 | [`mockups/pfl-dashboard-v1-program-manager.html`](mockups/pfl-dashboard-v1-program-manager.html) | Program Manager     | v1 draft |
 | [`mockups/pfl-dashboard-v1-administrator.html`](mockups/pfl-dashboard-v1-administrator.html)     | Administrator       | v1 draft |
-| [`mockups/pfl-dashboard-v1-stakeholder.html`](mockups/pfl-dashboard-v1-stakeholder.html)         | Project Stakeholder | v1 draft |
+| [`mockups/pfl-dashboard-v1-stakeholder.html`](mockups/pfl-dashboard-v1-stakeholder.html)         | Organization Stakeholder | v1 draft |
 
 Each mockup is a single self-contained HTML file — open it directly in
 a browser. There is no build step. It requires internet access on
@@ -83,7 +83,7 @@ without opening the HTML files.
      alt="Admin Audit Log"
      style="width:9in;height:5.06in" />
 
-**Project Stakeholder**
+**Organization Stakeholder**
 
 `[My Orgs](screenshots/stakeholder-my-orgs.png)`
 <img src="screenshots/stakeholder-my-orgs.png"
@@ -149,7 +149,7 @@ Six views:
    activity (time, Org, user, entity, change). No per-entity
    drill-down in v1.
 
-### 3.3 Project Stakeholder mockup
+### 3.3 Organization Stakeholder mockup
 
 Same three-view shape as Program Manager (My Orgs → Org detail →
 Funding Source detail) — read access to the full Org tree they
@@ -319,4 +319,4 @@ Mapping, or Audit Log.
 | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | 2026-07-19 | Initial Program Manager mockup: Org list, Org detail, Funding Source detail. Reconciled against architecture doc (General funding source added, partial-split removed). Nav simplified to remove Imports/Mapping, Reports/Exports, and Admin for this role; Funding Source detail tabs removed in favor of static sections.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | 2026-07-19 | Added Administrator mockup: Organizations, Org detail, Funding Source detail, Users, Imports & Mapping, Audit Log. Merged System/Finance Administrator into one role. Removed permission_level from the UI in favor of user-type-based access, with automatic all-Org access for System Administrators. Folded Access into Users (modal-based editing). Reworked Mapping Rules into Column Mapping (upload column → database field). Added expandable transaction rows, inline Funding Source metadata editing (both roles), and document upload — applied to both mockups.                                                                                                                                                                      |
-| 2026-07-19 | Added Project Stakeholder mockup: My Orgs, Org detail, Funding Source detail — full read access to their Org tree with all edit/create/upload actions removed; CSV export and document download retained. Granted Program Manager the ability to create and edit Organizations (previously Administrator-only). Added document download to all three mockups. Simplified Org list cards to name/status/funding/source-count only, removed activity and role/owner-team lines. Standardized Org list filters to All/Active/Archived everywhere. Removed redundant sidebar version tag and Org detail subtitle. Completed a full cross-mockup consistency pass (CSS-diffed), fixing several small drift issues accumulated across the three files. |
+| 2026-07-19 | Added Organization Stakeholder mockup: My Orgs, Org detail, Funding Source detail — full read access to their Org tree with all edit/create/upload actions removed; CSV export and document download retained. Granted Program Manager the ability to create and edit Organizations (previously Administrator-only). Added document download to all three mockups. Simplified Org list cards to name/status/funding/source-count only, removed activity and role/owner-team lines. Standardized Org list filters to All/Active/Archived everywhere. Removed redundant sidebar version tag and Org detail subtitle. Completed a full cross-mockup consistency pass (CSS-diffed), fixing several small drift issues accumulated across the three files. |

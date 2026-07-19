@@ -342,3 +342,196 @@ def api_import_batches():
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@org_import_bp.route('/api/admin/users', methods=['GET'])
+def api_users():
+    """
+    JSON API returning all non-deleted user profiles.
+    """
+    client = get_supabase_client()
+    try:
+        check_admin(client)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    try:
+        res = client.table('user_profile').select('*').is_('deleted_at', 'null').order('created_at', desc=True).execute()
+        return jsonify(res.data or []), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@org_import_bp.route('/api/admin/users', methods=['POST'])
+def api_create_user():
+    """
+    Creates a new User Profile before registration.
+    """
+    client = get_supabase_client()
+    try:
+        user_info = check_admin(client)
+        admin_profile_id = user_info["profile_id"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    data = request.json or {}
+    email = data.get('email')
+    full_name = data.get('full_name')
+    user_type = data.get('user_type', 'Organization Stakeholder')
+    status = data.get('status', 'Invited')
+    
+    if not email or not full_name:
+        return jsonify({"error": "Email and Full Name are required"}), 400
+        
+    # Check valid user_type and status
+    valid_types = ['System Administrator', 'Program Manager', 'Organization Stakeholder']
+    valid_statuses = ['Active', 'Invited', 'Inactive', 'Suspended']
+    
+    if user_type not in valid_types:
+        return jsonify({"error": f"Invalid role. Must be one of: {', '.join(valid_types)}"}), 400
+    if status not in valid_statuses:
+        return jsonify({"error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"}), 400
+        
+    try:
+        # Check if active profile with email already exists
+        existing = client.table('user_profile').select('*').eq('email', email).is_('deleted_at', 'null').execute()
+        if existing.data:
+            return jsonify({"error": "A user profile with this email already exists."}), 400
+            
+        res = client.table('user_profile').insert({
+            'email': email,
+            'full_name': full_name,
+            'user_type': user_type,
+            'status': status,
+            'created_by_user_id': admin_profile_id,
+            'updated_by_user_id': admin_profile_id
+        }).execute()
+        
+        if not res.data:
+            raise ValueError("Failed to create user profile in DB")
+            
+        new_profile = res.data[0]
+        
+        # Log event
+        from project_funding_ledger.audit import log_audit_event_async
+        log_audit_event_async(
+            user_id=user_info["user"].id,
+            action_type='Create',
+            entity_type='User',
+            table_name='user_profile',
+            record_id=new_profile['id'],
+            new_value=new_profile,
+            summary=f"Admin created User Profile for {email} with role {user_type} and status {status}."
+        )
+        
+        return jsonify(new_profile), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@org_import_bp.route('/api/admin/users/<user_id>', methods=['PUT'])
+def api_update_user(user_id):
+    """
+    Updates an existing user profile (role, status, full name).
+    """
+    client = get_supabase_client()
+    try:
+        user_info = check_admin(client)
+        admin_profile_id = user_info["profile_id"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    data = request.json or {}
+    
+    update_data = {}
+    if 'full_name' in data:
+        update_data['full_name'] = data['full_name']
+    if 'user_type' in data:
+        update_data['user_type'] = data['user_type']
+    if 'status' in data:
+        update_data['status'] = data['status']
+        
+    if not update_data:
+        return jsonify({"error": "No update fields provided."}), 400
+        
+    # Check valid user_type and status if they are being updated
+    valid_types = ['System Administrator', 'Program Manager', 'Organization Stakeholder']
+    valid_statuses = ['Active', 'Invited', 'Inactive', 'Suspended']
+    
+    if 'user_type' in update_data and update_data['user_type'] not in valid_types:
+        return jsonify({"error": f"Invalid role. Must be one of: {', '.join(valid_types)}"}), 400
+    if 'status' in update_data and update_data['status'] not in valid_statuses:
+        return jsonify({"error": f"Invalid status. Must be one of: {', '.join(valid_statuses)}"}), 400
+        
+    update_data['updated_by_user_id'] = admin_profile_id
+    
+    try:
+        # Get old value for audit logging
+        old_profile_res = client.table('user_profile').select('*').eq('id', user_id).execute()
+        if not old_profile_res.data:
+            return jsonify({"error": "User profile not found."}), 404
+        old_profile = old_profile_res.data[0]
+        
+        res = client.table('user_profile').update(update_data).eq('id', user_id).execute()
+        if not res.data:
+            raise ValueError("Failed to update user profile.")
+            
+        updated_profile = res.data[0]
+        
+        # Log event
+        from project_funding_ledger.audit import log_audit_event_async
+        log_audit_event_async(
+            user_id=user_info["user"].id,
+            action_type='Update',
+            entity_type='User',
+            table_name='user_profile',
+            record_id=user_id,
+            old_value=old_profile,
+            new_value=updated_profile,
+            summary=f"Admin updated User Profile for {old_profile['email']}."
+        )
+        
+        return jsonify(updated_profile), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@org_import_bp.route('/api/admin/users/<user_id>', methods=['DELETE'])
+def api_delete_user(user_id):
+    """
+    Soft-deletes a user profile.
+    """
+    client = get_supabase_client()
+    try:
+        user_info = check_admin(client)
+        admin_profile_id = user_info["profile_id"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    try:
+        old_profile_res = client.table('user_profile').select('*').eq('id', user_id).execute()
+        if not old_profile_res.data:
+            return jsonify({"error": "User profile not found."}), 404
+        old_profile = old_profile_res.data[0]
+        
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        res = client.table('user_profile').update({
+            'deleted_at': now,
+            'deleted_by_user_id': admin_profile_id
+        }).eq('id', user_id).execute()
+        
+        # Log event
+        from project_funding_ledger.audit import log_audit_event_async
+        log_audit_event_async(
+            user_id=user_info["user"].id,
+            action_type='Delete',
+            entity_type='User',
+            table_name='user_profile',
+            record_id=user_id,
+            old_value=old_profile,
+            summary=f"Admin soft-deleted User Profile for {old_profile['email']}."
+        )
+        
+        return jsonify({"message": "User profile deleted successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+

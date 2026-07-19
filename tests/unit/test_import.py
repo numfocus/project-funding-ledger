@@ -167,7 +167,7 @@ def test_import_routes_auth_check(mock_create_client, client):
     mock_client.auth.get_user.return_value = mock_user_res
     
     # Mock profile response (User is not admin, so access should be denied)
-    mock_client.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(data={"user_type": "Project Stakeholder"})
+    mock_client.table.return_value.select.return_value.eq.return_value.single.return_value.execute.return_value = MagicMock(data={"user_type": "Organization Stakeholder"})
     
     # Attempting to hit the route should return 403 Forbidden
     response = client.post("/admin/import/organizations")

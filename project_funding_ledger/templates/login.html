@@ -23,5 +23,8 @@
         <button type="submit" class="btn btn-primary" id="login-submit-btn">Sign In</button>
     </form>
     
+    <div class="card-footer" id="login-footer">
+        <a href="{{ url_for('auth.register') }}" id="register-link">Have an invite? Register.</a>
+    </div>
 </div>
 {% endblock %}
