@@ -1177,31 +1177,33 @@ key fields, relationships, and design notes.
 Detailed SQL migration scripts will be developed separately from this
 design specification.
 
-## 4.10.1 project
+## 4.10.1 organization
 
-The project table stores NumFOCUS fiscally sponsored projects,
+The organization table stores NumFOCUS fiscally sponsored projects,
 conferences, programs, operational initiatives, and other organizational
 activities tracked within the PFL.
 
-The project table is the primary security boundary for the application.
+The organization table is the primary security boundary for the application.
 
-The project table provides the organizational container for Funding
+The organization table provides the organizational container for Funding
 Sources, Project Governance, Governing Agreements, Supporting Documents,
 and Reporting Obligations. Financial Transactions are associated with
-the Project through their assigned Funding Source.
+the Organization through their assigned Funding Source.
 
 Key Fields
 
 | **Field** | **Type** | **Required** | **Notes** |
 |----|----|----|----|
-| id | uuid | Yes | Primary key |
-| project_name | text | Yes | Official project name |
-| project_slug | text | Yes | URL-safe unique identifier |
+| id | uuid | Yes | Primary key (references organization_key.id) |
+| organization_name | text | Yes | Official organization name |
+| organization_slug | text | Yes | URL-safe unique identifier |
 | status | text | Yes | Active, inactive, archived, dormant, closed |
-| project_owner | text | No | Internal or external project owner name |
-| description | text | No | General project description |
-| website_url | text | No | Public project website |
-| notes | text | No | Internal notes |
+| organization_type | text | Yes | Fiscal Sponsorship, Event |
+| description | text | No | General organization description |
+| website_url | text | No | Public organization website |
+| source_code_url | text | No | Public source code repository URL |
+| donation_url | text | No | Donation page URL |
+| join_date | date | No | Date the organization joined NumFOCUS |
 | created_at | timestamp | Yes | Record creation timestamp |
 | updated_at | timestamp | Yes | Last update timestamp |
 | created_by_user_id | uuid | No | User who created the record |
@@ -1211,22 +1213,84 @@ Key Fields
 
 ### 4.10.1.1 Relationships
 
-A Project may have many Funding Sources.
+An Organization belongs to exactly one Organization Key.
 
-A Project may have many Project Governance items.
+An Organization has one related Organization Internal record.
 
-A Project may have many related Supporting Documents.
+An Organization may have many Funding Sources.
 
-A Project may have many Governing Agreements through Funding Sources.
+An Organization may have many Project Governance items.
 
-A Project may have many Reporting Obligations through Funding Sources.
+An Organization may have many related Supporting Documents.
 
-A Project may have many Financial Transactions through Funding Sources.
+An Organization may have many Governing Agreements through Funding Sources.
+
+An Organization may have many Reporting Obligations through Funding Sources.
+
+An Organization may have many Financial Transactions through Funding Sources.
 
 ### 4.10.1.2 Design Notes
 
-Project records should be relatively stable. Project names should not be
-used as foreign keys. All relationships should use project_id.
+Organization records should be relatively stable. Organization names should not be
+used as foreign keys. All relationships should use organization_id.
+
+## 4.10.1.3 organization_key
+
+The organization_key table provides a layer of indirection for the
+organization identifier. It maps an auto-generated unique ID to a
+user-specified import key.
+
+Key Fields
+
+| **Field** | **Type** | **Required** | **Notes** |
+|----|----|----|----|
+| id | uuid | Yes | Primary key (auto-generated) |
+| import_key | text | Yes | Unique user-specified string identifier |
+| created_at | timestamp | Yes | Record creation timestamp |
+| updated_at | timestamp | Yes | Last update timestamp |
+| created_by_user_id | uuid | No | User who created the record |
+| updated_by_user_id | uuid | No | User who last updated the record |
+
+### 4.10.1.3.1 Relationships
+
+An Organization Key has a one-to-one relationship with an Organization.
+
+### 4.10.1.3.2 Design Notes
+
+This table allows internal system foreign keys to remain stable UUIDs while
+accommodating changes, remapping, or customization of the user-specified
+import identifiers.
+
+## 4.10.1.4 organization_internal
+
+The organization_internal table stores restricted/private organization
+metadata. It requires more restrictive permissions to access columns
+like internal notes and overhead rates.
+
+Key Fields
+
+| **Field** | **Type** | **Required** | **Notes** |
+|----|----|----|----|
+| id | uuid | Yes | Primary key (references organization.id) |
+| overhead_grant | numeric | Yes | Overhead rate for grants (default 0.0) |
+| overhead_donation_general | numeric | Yes | Overhead rate for general donations (default 0.0) |
+| overhead_donation_corporate | numeric | Yes | Overhead rate for corporate donations (default 0.0) |
+| notes | text | No | Internal private notes |
+| created_at | timestamp | Yes | Record creation timestamp |
+| updated_at | timestamp | Yes | Last update timestamp |
+| created_by_user_id | uuid | No | User who created the record |
+| updated_by_user_id | uuid | No | User who last updated the record |
+| deleted_at | timestamp | No | Soft deletion timestamp |
+| deleted_by_user_id | uuid | No | User who soft deleted the record |
+
+### 4.10.1.4.1 Relationships
+
+An Organization Internal record belongs to exactly one Organization.
+
+### 4.10.1.4.2 Design Notes
+
+This table enforces strict role-based access control (RBAC) separating public
+organization metadata from private financial and administrative overhead details.
 
 ## 4.10.2 funding_source
 
@@ -2313,7 +2377,7 @@ data.
 
 Examples of unique constraints include, but are not limited to:
 
-- project.project_slug
+- organization.organization_slug
 
 - import_batch.source_file_hash
 
