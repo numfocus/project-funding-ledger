@@ -51,8 +51,20 @@ def login():
                     summary=f"User {email} logged in successfully."
                 )
                 
+                # Get user type for redirect routing
+                user_type = 'Project Stakeholder'
+                try:
+                    profile_res = client.table('user_profile').select('user_type').eq('auth_user_id', res.user.id).execute()
+                    if profile_res.data:
+                        user_type = profile_res.data[0]['user_type']
+                except Exception:
+                    pass
+                
                 flash("Welcome back!", "success")
-                return redirect(url_for('profile.profile_page'))
+                if user_type == 'System Administrator':
+                    return redirect(url_for('org_import.admin_dashboard'))
+                else:
+                    return redirect(url_for('profile.profile_page'))
         except Exception as e:
             flash(f"Login failed: {str(e)}", "error")
             

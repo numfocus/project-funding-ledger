@@ -1,0 +1,775 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard | Project Funding Ledger{% endblock %}
+
+{% block head %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- React 18 & ReactDOM 18 -->
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<!-- Babel for JSX compiler -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script>
+    // Customize Tailwind color scheme
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        50: '#f0f9ff',
+                        100: '#e0f2fe',
+                        500: '#0ea5e9',
+                        600: '#0284c7',
+                        700: '#0369a1',
+                        800: '#075985',
+                        950: '#082f49',
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    /* Avoid clashes with main stylesheet */
+    body {
+        background-color: #f8fafc;
+        font-family: 'Inter', sans-serif;
+    }
+    main {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="admin-dashboard-root"></div>
+
+<!-- React App compiled in-browser via Babel -->
+<script type="text/babel">
+{% raw %}
+    const { useState, useEffect } = React;
+
+    const formatValue = (field, val) => {
+        if (val === undefined || val === null) return 'N/A';
+        if (field && field.startsWith('overhead_')) {
+            return (Math.round(Number(val) * 10000) / 100) + '%';
+        }
+        return String(val);
+    };
+
+    function AdminDashboardApp() {
+        const [view, setView] = useState('dashboard'); // 'dashboard', 'batches', 'batch-preview'
+        const [selectedBatchId, setSelectedBatchId] = useState(null);
+        const [selectedBatchRows, setSelectedBatchRows] = useState([]);
+        const [selectedBatchInfo, setSelectedBatchInfo] = useState(null);
+        const [organizations, setOrganizations] = useState([]);
+        const [batches, setBatches] = useState([]);
+        const [loading, setLoading] = useState(false);
+        const [searchTerm, setSearchTerm] = useState('');
+        const [showUploadModal, setShowUploadModal] = useState(false);
+        const [uploadFile, setUploadFile] = useState(null);
+        const [uploading, setUploading] = useState(false);
+        const [uploadError, setUploadError] = useState(null);
+        const [activeBannerBatch, setActiveBannerBatch] = useState(null);
+
+        // Fetch dashboard data
+        useEffect(() => {
+            fetchOrganizations();
+            fetchBatches();
+        }, []);
+
+        // Detect if there's any batch with pending rows for the banner
+        useEffect(() => {
+            const pendingBatch = batches.find(b => b.pending_count > 0);
+            setActiveBannerBatch(pendingBatch || null);
+        }, [batches]);
+
+        const fetchOrganizations = async () => {
+            try {
+                const res = await fetch('/api/admin/organizations');
+                if (res.ok) {
+                    const data = await res.json();
+                    setOrganizations(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch organizations:", err);
+            }
+        };
+
+        const fetchBatches = async () => {
+            try {
+                const res = await fetch('/api/admin/imports/batches');
+                if (res.ok) {
+                    const data = await res.json();
+                    setBatches(data);
+                }
+            } catch (err) {
+                console.error("Failed to fetch batches:", err);
+            }
+        };
+
+        const handleUpload = async (e) => {
+            e.preventDefault();
+            if (!uploadFile) return;
+            setUploading(true);
+            setUploadError(null);
+
+            const formData = new FormData();
+            formData.append('file', uploadFile);
+
+            try {
+                const res = await fetch('/admin/import/organizations', {
+                    method: 'POST',
+                    body: formData
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setShowUploadModal(false);
+                    setUploadFile(null);
+                    // Refresh data
+                    await fetchBatches();
+                    // Redirect to the newly created batch preview
+                    viewBatchPreview(data.batch_id);
+                } else {
+                    setUploadError(data.error || "Failed to upload spreadsheet.");
+                }
+            } catch (err) {
+                setUploadError("Network error during file upload.");
+            } finally {
+                setUploading(false);
+            }
+        };
+
+        const viewBatchPreview = async (batchId) => {
+            setLoading(true);
+            try {
+                const res = await fetch(`/admin/import/organizations/batches/${batchId}`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setSelectedBatchInfo(data.batch);
+                    setSelectedBatchRows(data.rows);
+                    setSelectedBatchId(batchId);
+                    setView('batch-preview');
+                }
+            } catch (err) {
+                console.error("Failed to fetch batch preview:", err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const handleConfirmRow = async (rowId) => {
+            try {
+                const res = await fetch(`/admin/import/organizations/rows/${rowId}/confirm`, {
+                    method: 'POST'
+                });
+                if (res.ok) {
+                    // Update UI status immediately to reflect confirmation task enqueued
+                    setSelectedBatchRows(prev =>
+                        prev.map(r => r.id === rowId ? { ...r, status: 'Confirmed' } : r)
+                    );
+                    // Wait a bit and refresh batches to update the banner stats
+                    setTimeout(() => {
+                        fetchBatches();
+                        // Refetch details to see if status updated in DB
+                        if (selectedBatchId) viewBatchPreview(selectedBatchId);
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error("Failed to confirm row:", err);
+            }
+        };
+
+        const handleCancelRow = async (rowId) => {
+            try {
+                const res = await fetch(`/admin/import/organizations/rows/${rowId}/cancel`, {
+                    method: 'POST'
+                });
+                if (res.ok) {
+                    setSelectedBatchRows(prev =>
+                        prev.map(r => r.id === rowId ? { ...r, status: 'Cancelled' } : r)
+                    );
+                    fetchBatches();
+                }
+            } catch (err) {
+                console.error("Failed to cancel row:", err);
+            }
+        };
+
+        const handleConfirmAll = async () => {
+            if (!confirm("Are you sure you want to confirm and apply all pending edits in this batch?")) return;
+            try {
+                const res = await fetch(`/admin/import/organizations/batches/${selectedBatchId}/confirm-all`, {
+                    method: 'POST'
+                });
+                if (res.ok) {
+                    setSelectedBatchRows(prev =>
+                        prev.map(r => r.status === 'Pending' ? { ...r, status: 'Confirmed' } : r)
+                    );
+                    setTimeout(() => {
+                        fetchBatches();
+                        if (selectedBatchId) viewBatchPreview(selectedBatchId);
+                    }, 2000);
+                }
+            } catch (err) {
+                console.error("Failed to confirm all:", err);
+            }
+        };
+
+        const handleCancelAll = async () => {
+            if (!confirm("Are you sure you want to cancel all remaining pending/error edits in this batch?")) return;
+            try {
+                const res = await fetch(`/admin/import/organizations/batches/${selectedBatchId}/cancel-all`, {
+                    method: 'POST'
+                });
+                if (res.ok) {
+                    setSelectedBatchRows(prev =>
+                        prev.map(r => ['Pending', 'Error'].includes(r.status) ? { ...r, status: 'Cancelled' } : r)
+                    );
+                    fetchBatches();
+                }
+            } catch (err) {
+                console.error("Failed to cancel all:", err);
+            }
+        };
+
+        // Filtered organizations list
+        const filteredOrgs = organizations.filter(org => 
+            org.organization_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            org.organization_slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            (org.description && org.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        );
+
+        return (
+            <div className="min-h-screen flex flex-col bg-slate-50">
+                {/* Active Import Banner */}
+                {activeBannerBatch && (
+                    <div className="bg-gradient-to-r from-amber-500 to-orange-600 text-white py-3 px-6 shadow-md flex items-center justify-between transition-all duration-300 animate-pulse">
+                        <div className="flex items-center gap-3">
+                            <i className="fa-solid fa-box-archive text-xl"></i>
+                            <span className="font-medium text-sm sm:text-base">
+                                Import Staging Active: Batch <strong className="underline">{activeBannerBatch.file_name}</strong> has <strong>{activeBannerBatch.pending_count}</strong> pending row approvals.
+                            </span>
+                        </div>
+                        <button 
+                            onClick={() => viewBatchPreview(activeBannerBatch.id)}
+                            className="bg-white text-orange-600 hover:bg-orange-50 font-semibold px-4 py-1.5 rounded-lg shadow text-xs sm:text-sm transition duration-150"
+                        >
+                            Review & Approve <i className="fa-solid fa-arrow-right ml-1"></i>
+                        </button>
+                    </div>
+                )}
+
+                {/* Dashboard Nav Header */}
+                <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                        <div className="flex items-center gap-4">
+                            <div className="bg-brand-950 text-white p-2 rounded-lg flex items-center justify-center">
+                                <i className="fa-solid fa-wallet text-xl"></i>
+                            </div>
+                            <span className="font-bold text-xl text-slate-800 tracking-tight">Funding Ledger Admin</span>
+                        </div>
+                        <nav className="flex items-center gap-6">
+                            <button 
+                                onClick={() => setView('dashboard')}
+                                className={`text-sm font-semibold transition py-2 border-b-2 ${view === 'dashboard' ? 'text-brand-700 border-brand-600' : 'text-slate-500 border-transparent hover:text-slate-800'}`}
+                            >
+                                <i className="fa-solid fa-building-ngo mr-1.5"></i> Organizations
+                            </button>
+                            <button 
+                                onClick={() => setView('batches')}
+                                className={`text-sm font-semibold transition py-2 border-b-2 ${view === 'batches' || view === 'batch-preview' ? 'text-brand-700 border-brand-600' : 'text-slate-500 border-transparent hover:text-slate-800'}`}
+                            >
+                                <i className="fa-solid fa-file-import mr-1.5"></i> Import Sessions
+                            </button>
+                            <a href="/profile" className="text-slate-500 hover:text-slate-800 text-sm font-semibold flex items-center gap-1">
+                                <i className="fa-solid fa-user-circle text-lg"></i> Profile
+                            </a>
+                        </nav>
+                    </div>
+                </header>
+
+                {/* Dashboard Content */}
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {view === 'dashboard' && (
+                        <div>
+                            {/* Summary Stats */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow transition duration-200">
+                                    <div>
+                                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Total Organizations</span>
+                                        <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{organizations.length}</h3>
+                                    </div>
+                                    <div className="bg-brand-50 text-brand-600 p-4 rounded-xl">
+                                        <i className="fa-solid fa-building text-2xl"></i>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow transition duration-200">
+                                    <div>
+                                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Fiscal Sponsorships</span>
+                                        <h3 className="text-3xl font-extrabold text-slate-800 mt-1">
+                                            {organizations.filter(o => o.organization_type === 'Fiscal Sponsorship').length}
+                                        </h3>
+                                    </div>
+                                    <div className="bg-emerald-50 text-emerald-600 p-4 rounded-xl">
+                                        <i className="fa-solid fa-handshake-angle text-2xl"></i>
+                                    </div>
+                                </div>
+                                <div className="bg-white p-6 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow transition duration-200">
+                                    <div>
+                                        <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Import Batches</span>
+                                        <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{batches.length}</h3>
+                                    </div>
+                                    <div className="bg-indigo-50 text-indigo-600 p-4 rounded-xl">
+                                        <i className="fa-solid fa-history text-2xl"></i>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Header Panel */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                                <div className="relative flex-1 max-w-md">
+                                    <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                                    <input 
+                                        type="text" 
+                                        placeholder="Search organizations..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm text-sm"
+                                    />
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        onClick={() => setView('batches')}
+                                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl border border-slate-200 shadow-sm text-sm transition flex items-center gap-2"
+                                    >
+                                        <i className="fa-solid fa-history"></i> View Imports
+                                    </button>
+                                    <button 
+                                        onClick={() => setShowUploadModal(true)}
+                                        className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md text-sm transition flex items-center gap-2"
+                                    >
+                                        <i className="fa-solid fa-file-excel text-lg"></i> Import Organizations
+                                    </button>
+                                </div>
+                            </div>
+
+                            {/* Organizations Table Card */}
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                                <th className="py-4 px-6">Organization Details</th>
+                                                <th className="py-4 px-6">Type</th>
+                                                <th className="py-4 px-6">Overhead Rates</th>
+                                                <th className="py-4 px-6">Join Date</th>
+                                                <th className="py-4 px-6">Status</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
+                                            {filteredOrgs.length > 0 ? (
+                                                filteredOrgs.map(org => (
+                                                    <tr key={org.id} className="hover:bg-slate-50/50 transition">
+                                                        <td className="py-4 px-6">
+                                                            <div className="font-semibold text-slate-800 text-base">{org.organization_name}</div>
+                                                            <div className="text-slate-400 text-xs font-mono mt-0.5">slug: {org.organization_slug}</div>
+                                                            {org.description && (
+                                                                <p className="text-slate-400 text-xs mt-1 max-w-md line-clamp-1">{org.description}</p>
+                                                            )}
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <span className={`px-2.5 py-1 rounded-full text-xs font-semibold inline-block ${org.organization_type === 'Event' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'}`}>
+                                                                {org.organization_type}
+                                                            </span>
+                                                        </td>
+                                                        <td className="py-4 px-6 font-mono text-xs">
+                                                            <div>Grant: {Math.round((org.overhead_grant || 0) * 10000) / 100}%</div>
+                                                            <div>Gen Don: {Math.round((org.overhead_donation_general || 0) * 10000) / 100}%</div>
+                                                            <div>Corp Don: {Math.round((org.overhead_donation_corporate || 0) * 10000) / 100}%</div>
+                                                        </td>
+                                                        <td className="py-4 px-6 text-slate-500 font-mono text-xs">
+                                                            {org.join_date || 'N/A'}
+                                                        </td>
+                                                        <td className="py-4 px-6">
+                                                            <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${org.status === 'Active' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'}`}>
+                                                                <span className={`h-1.5 w-1.5 rounded-full ${org.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                                {org.status}
+                                                            </span>
+                                                        </td>
+                                                    </tr>
+                                                ))
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="5" className="py-12 text-center text-slate-400 font-semibold">
+                                                        No organizations found.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'batches' && (
+                        <div>
+                            {/* Header Panel */}
+                            <div className="flex items-center justify-between mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800">Spreadsheet Import History</h2>
+                                    <p className="text-slate-400 text-sm mt-0.5">List of all organization import batches uploaded by administrators</p>
+                                </div>
+                                <button 
+                                    onClick={() => setShowUploadModal(true)}
+                                    className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2.5 rounded-xl shadow-md text-sm transition flex items-center gap-2"
+                                >
+                                    <i className="fa-solid fa-file-excel text-lg"></i> Import Organizations
+                                </button>
+                            </div>
+
+                            {/* Batches Table Card */}
+                            <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-left border-collapse">
+                                        <thead>
+                                            <tr className="bg-slate-50 border-b border-slate-200 text-slate-400 text-xs font-semibold uppercase tracking-wider">
+                                                <th className="py-4 px-6">File Details</th>
+                                                <th className="py-4 px-6">Created At</th>
+                                                <th className="py-4 px-6">Row Summary</th>
+                                                <th className="py-4 px-6">Progress Status</th>
+                                                <th className="py-4 px-6 text-right">Actions</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody className="divide-y divide-slate-100 text-sm text-slate-600">
+                                            {batches.length > 0 ? (
+                                                batches.map(batch => {
+                                                    const processedCount = batch.confirmed_count + batch.cancelled_count + batch.error_count;
+                                                    const pct = batch.total_count > 0 ? Math.round((processedCount / batch.total_count) * 100) : 0;
+                                                    return (
+                                                        <tr key={batch.id} className="hover:bg-slate-50/50 transition">
+                                                            <td className="py-4 px-6">
+                                                                <div className="font-semibold text-slate-800 flex items-center gap-2">
+                                                                    <i className="fa-solid fa-file-excel text-emerald-600 text-lg"></i>
+                                                                    {batch.file_name}
+                                                                </div>
+                                                                <div className="text-slate-400 text-xs font-mono mt-0.5">batch id: {batch.id}</div>
+                                                            </td>
+                                                            <td className="py-4 px-6 text-slate-500 font-mono text-xs">
+                                                                {new Date(batch.created_at).toLocaleString()}
+                                                            </td>
+                                                            <td className="py-4 px-6 font-mono text-xs">
+                                                                <div className="grid grid-cols-2 gap-x-4 gap-y-0.5">
+                                                                    <span className="text-amber-600">Pending: {batch.pending_count}</span>
+                                                                    <span className="text-emerald-600">Confirmed: {batch.confirmed_count}</span>
+                                                                    <span className="text-slate-500">Cancelled: {batch.cancelled_count}</span>
+                                                                    <span className="text-red-500">Error: {batch.error_count}</span>
+                                                                </div>
+                                                            </td>
+                                                            <td className="py-4 px-6">
+                                                                <div className="w-full max-w-xs bg-slate-100 rounded-full h-2 shadow-inner overflow-hidden mb-1">
+                                                                    <div 
+                                                                        className={`h-full ${batch.pending_count > 0 ? 'bg-amber-400' : 'bg-emerald-500'}`}
+                                                                        style={{ width: `${pct}%` }}
+                                                                    ></div>
+                                                                </div>
+                                                                <span className="text-slate-400 text-xs font-semibold">{processedCount}/{batch.total_count} processed ({pct}%)</span>
+                                                            </td>
+                                                            <td className="py-4 px-6 text-right">
+                                                                <button 
+                                                                    onClick={() => viewBatchPreview(batch.id)}
+                                                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2 rounded-lg text-xs transition inline-flex items-center gap-1.5 border border-slate-200 shadow-sm"
+                                                                >
+                                                                    Review Preview <i className="fa-solid fa-eye"></i>
+                                                                </button>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })
+                                            ) : (
+                                                <tr>
+                                                    <td colSpan="5" className="py-12 text-center text-slate-400 font-semibold">
+                                                        No import sessions uploaded yet.
+                                                    </td>
+                                                </tr>
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {view === 'batch-preview' && selectedBatchInfo && (
+                        <div>
+                            {/* Header Panel */}
+                            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                                <div className="flex items-center gap-4">
+                                    <button 
+                                        onClick={() => setView('batches')}
+                                        className="bg-white hover:bg-slate-50 text-slate-700 h-10 w-10 rounded-xl border border-slate-200 shadow-sm flex items-center justify-center transition"
+                                    >
+                                        <i className="fa-solid fa-arrow-left"></i>
+                                    </button>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-slate-800 flex items-center gap-2">
+                                            Previewing: {selectedBatchInfo.file_name}
+                                        </h2>
+                                        <p className="text-slate-400 text-sm mt-0.5 font-mono">
+                                            Uploaded: {new Date(selectedBatchInfo.created_at).toLocaleString()}
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="flex items-center gap-3">
+                                    {selectedBatchRows.some(r => r.status === 'Pending') && (
+                                        <button 
+                                            onClick={handleConfirmAll}
+                                            className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded-xl shadow text-xs transition flex items-center gap-1.5"
+                                        >
+                                            <i className="fa-solid fa-check-double"></i> Confirm All Pending
+                                        </button>
+                                    )}
+                                    {selectedBatchRows.some(r => ['Pending', 'Error'].includes(r.status)) && (
+                                        <button 
+                                            onClick={handleCancelAll}
+                                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2 rounded-xl border border-rose-200 shadow-sm text-xs transition flex items-center gap-1.5"
+                                        >
+                                            <i className="fa-solid fa-ban"></i> Cancel All Remaining
+                                        </button>
+                                    )}
+                                    <span className="text-sm text-slate-400 font-semibold uppercase tracking-wider">
+                                        Total Rows: {selectedBatchRows.length}
+                                    </span>
+                                </div>
+                            </div>
+
+                            {/* Row cards list */}
+                            <div className="space-y-6">
+                                {selectedBatchRows.length > 0 ? (
+                                    selectedBatchRows.map((row, index) => {
+                                        const data = row.organization_data || {};
+                                        const diff = row.diff_data || {};
+                                        const hasDiff = Object.keys(diff).length > 0;
+                                        return (
+                                            <div key={row.id} className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden hover:shadow-md transition duration-200">
+                                                {/* Header band of row card */}
+                                                <div className="bg-slate-50 border-b border-slate-100 py-3.5 px-6 flex flex-wrap items-center justify-between gap-3">
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="text-slate-400 font-semibold text-sm">Row #{index + 1}</span>
+                                                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${row.action_type === 'Create' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-600 border border-amber-100'}`}>
+                                                            {row.action_type}
+                                                        </span>
+                                                        <span className="text-slate-800 font-mono text-xs font-semibold bg-slate-200/50 px-2 py-0.5 rounded">Key: {row.import_key}</span>
+                                                    </div>
+                                                    <div className="flex items-center gap-3">
+                                                        {/* Status Badge */}
+                                                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                                                            row.status === 'Confirmed' ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                                            row.status === 'Cancelled' ? 'bg-slate-50 text-slate-500 border border-slate-100' :
+                                                            row.status === 'Error' ? 'bg-red-50 text-red-700 border border-red-100' :
+                                                            'bg-amber-50 text-amber-700 border border-amber-100 animate-pulse'
+                                                        }`}>
+                                                            {row.status}
+                                                        </span>
+                                                    </div>
+                                                </div>
+
+                                                {/* Main content of row card */}
+                                                <div className="p-6">
+                                                    {row.status === 'Error' && row.error_message && (
+                                                        <div className="bg-red-50 text-red-800 p-4 rounded-xl border border-red-100 mb-6 flex items-start gap-3">
+                                                            <i className="fa-solid fa-circle-exclamation text-lg mt-0.5"></i>
+                                                            <div>
+                                                                <h4 className="font-bold text-sm">Processing Failure Details</h4>
+                                                                <p className="text-xs font-mono mt-1 whitespace-pre-wrap">{row.error_message}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+
+                                                    {row.action_type === 'Create' ? (
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+                                                            <div>
+                                                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Proposed Org Name</span>
+                                                                <div className="text-slate-800 font-bold text-lg mt-0.5">{data.organization_name}</div>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Proposed Slug</span>
+                                                                <div className="text-slate-800 font-mono text-sm mt-0.5">{data.organization_slug}</div>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Type</span>
+                                                                <div className="text-slate-800 font-semibold text-sm mt-0.5">{data.organization_type}</div>
+                                                            </div>
+                                                            <div>
+                                                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Join Date</span>
+                                                                <div className="text-slate-800 font-mono text-sm mt-0.5">{data.join_date || 'N/A'}</div>
+                                                            </div>
+                                                            <div className="md:col-span-2">
+                                                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Description</span>
+                                                                <div className="text-slate-600 text-sm mt-0.5">{data.description || 'No description provided.'}</div>
+                                                            </div>
+                                                            <div className="md:col-span-2 grid grid-cols-1 sm:grid-cols-3 gap-4 bg-slate-50/50 p-4 rounded-xl border border-slate-100">
+                                                                <div>
+                                                                    <span className="text-slate-400 text-xs font-semibold">Grant Overhead</span>
+                                                                    <div className="text-slate-800 font-mono text-sm mt-0.5">{Math.round((data.overhead_grant || 0) * 10000) / 100}%</div>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-slate-400 text-xs font-semibold">Gen Don Overhead</span>
+                                                                    <div className="text-slate-800 font-mono text-sm mt-0.5">{Math.round((data.overhead_donation_general || 0) * 10000) / 100}%</div>
+                                                                </div>
+                                                                <div>
+                                                                    <span className="text-slate-400 text-xs font-semibold">Corp Don Overhead</span>
+                                                                    <div className="text-slate-800 font-mono text-sm mt-0.5">{Math.round((data.overhead_donation_corporate || 0) * 10000) / 100}%</div>
+                                                                </div>
+                                                            </div>
+                                                            <div className="md:col-span-2">
+                                                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Internal Notes</span>
+                                                                <div className="text-slate-600 text-sm mt-0.5 italic">{data.notes || 'None.'}</div>
+                                                            </div>
+                                                        </div>
+                                                    ) : (
+                                                        <div>
+                                                            {hasDiff ? (
+                                                                <div className="space-y-4">
+                                                                    <div className="text-slate-400 text-xs font-semibold uppercase tracking-wider mb-2">Value Differences Detected</div>
+                                                                    <div className="grid grid-cols-1 md:grid-cols-3 bg-slate-50 rounded-xl border border-slate-100 font-semibold text-xs text-slate-400 py-2.5 px-4 mb-1">
+                                                                        <div>Field Properties</div>
+                                                                        <div>Current DB Value (Old)</div>
+                                                                        <div>Import Excel Value (New)</div>
+                                                                    </div>
+                                                                    <div className="space-y-2.5 divide-y divide-slate-100">
+                                                                        {Object.entries(diff).map(([field, delta]) => (
+                                                                            <div key={field} className="grid grid-cols-1 md:grid-cols-3 pt-2.5 px-4 items-center">
+                                                                                <div className="font-semibold text-slate-700 text-sm capitalize">{field.replace(/_/g, ' ')}</div>
+                                                                                <div className="text-red-500 line-through text-sm font-mono truncate mr-4">{formatValue(field, delta.old)}</div>
+                                                                                <div className="text-emerald-600 text-sm font-semibold font-mono truncate">{formatValue(field, delta.new)}</div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </div>
+                                                            ) : (
+                                                                <div className="text-center py-6 bg-slate-50 rounded-xl border border-slate-100 text-slate-400 text-sm font-semibold">
+                                                                    <i className="fa-solid fa-circle-check text-emerald-500 mr-1.5 text-lg"></i> Row records match the active database values exactly. No updates needed.
+                                                                </div>
+                                                            )}
+                                                        </div>
+                                                    )}
+
+                                                    {/* Control action buttons */}
+                                                    {row.status === 'Pending' && (
+                                                        <div className="flex items-center justify-end gap-3 mt-6 border-t border-slate-100 pt-4">
+                                                            <button 
+                                                                onClick={() => handleCancelRow(row.id)}
+                                                                className="bg-white hover:bg-slate-50 text-slate-500 hover:text-slate-800 font-semibold px-4.5 py-2 rounded-xl border border-slate-200 shadow-sm text-sm transition flex items-center gap-1.5"
+                                                            >
+                                                                <i className="fa-solid fa-ban"></i> Cancel Edit
+                                                            </button>
+                                                            <button 
+                                                                onClick={() => handleConfirmRow(row.id)}
+                                                                className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-5 py-2 rounded-xl shadow-md text-sm transition flex items-center gap-1.5"
+                                                            >
+                                                                <i className="fa-solid fa-check-circle"></i> Confirm & Apply
+                                                            </button>
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <div className="py-12 bg-white border border-slate-100 text-center text-slate-400 font-semibold rounded-2xl">
+                                        No preview rows in this import batch.
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </main>
+
+                {/* Upload Spreadsheet Modal */}
+                {showUploadModal && (
+                    <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                        <div className="bg-white w-full max-w-lg rounded-2xl border border-slate-100 shadow-2xl overflow-hidden transform transition duration-300">
+                            <div className="bg-slate-50 border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+                                <h3 className="font-bold text-lg text-slate-800 flex items-center gap-2">
+                                    <i className="fa-solid fa-file-excel text-emerald-600 text-xl"></i>
+                                    Import Organizations Spreadsheet
+                                </h3>
+                                <button 
+                                    onClick={() => { setShowUploadModal(false); setUploadError(null); }}
+                                    className="text-slate-400 hover:text-slate-700 text-xl"
+                                >
+                                    &times;
+                                </button>
+                            </div>
+                            <form onSubmit={handleUpload} className="p-6 space-y-4">
+                                {uploadError && (
+                                    <div className="bg-red-50 text-red-800 p-3.5 rounded-xl border border-red-100 text-xs flex items-center gap-2.5">
+                                        <i className="fa-solid fa-circle-exclamation text-base"></i>
+                                        <span>{uploadError}</span>
+                                    </div>
+                                )}
+
+                                <div className="border-2 border-dashed border-slate-200 hover:border-brand-500 rounded-xl p-8 text-center cursor-pointer transition relative bg-slate-50/50">
+                                    <input 
+                                        type="file" 
+                                        accept=".xlsx, .xls"
+                                        onChange={(e) => setUploadFile(e.target.files[0])}
+                                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                                        required
+                                    />
+                                    <div className="space-y-2">
+                                        <i className="fa-solid fa-cloud-arrow-up text-brand-500 text-4xl"></i>
+                                        <p className="text-slate-600 font-semibold text-sm">
+                                            {uploadFile ? uploadFile.name : "Select or drag Excel spreadsheet"}
+                                        </p>
+                                        <p className="text-slate-400 text-xs">Supports .xlsx and .xls formats</p>
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button 
+                                        type="button"
+                                        disabled={uploading}
+                                        onClick={() => { setShowUploadModal(false); setUploadError(null); }}
+                                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl text-sm transition"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button 
+                                        type="submit"
+                                        disabled={uploading || !uploadFile}
+                                        className="bg-brand-700 hover:bg-brand-800 disabled:bg-brand-300 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md text-sm transition flex items-center gap-2"
+                                    >
+                                        {uploading ? (
+                                            <>
+                                                <i className="fa-solid fa-spinner animate-spin"></i> Uploading & Parsing...
+                                            </>
+                                        ) : (
+                                            <>
+                                                <i className="fa-solid fa-upload"></i> Start Import Staging
+                                            </>
+                                        )}
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('admin-dashboard-root'));
+    root.render(<AdminDashboardApp />);
+{% endraw %}
+</script>
+{% endblock %}

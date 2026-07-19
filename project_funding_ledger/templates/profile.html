@@ -31,8 +31,11 @@
         </div>
 
         
-        <div class="action-row" style="margin-top: 24px;">
+        <div class="action-row" style="margin-top: 24px; display: flex; gap: 8px; flex-wrap: wrap;">
             <button type="submit" class="btn btn-primary" id="save-btn">Save Changes</button>
+            {% if user_profile.user_type == 'System Administrator' %}
+                <a href="{{ url_for('org_import.admin_dashboard') }}" class="btn" id="admin-dashboard-btn" style="background-color: var(--primary-color, #1e3a8a); color: white; text-decoration: none; padding: 10px 16px; border-radius: 6px; font-weight: 500; display: inline-flex; align-items: center; justify-content: center; font-size: 14px;">Admin Dashboard</a>
+            {% endif %}
             <a href="{{ url_for('auth.logout') }}" class="btn btn-danger" id="logout-btn">Log Out</a>
         </div>
     </form>

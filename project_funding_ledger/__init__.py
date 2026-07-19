@@ -4,6 +4,8 @@ from dotenv import load_dotenv
 from project_funding_ledger.auth import auth_bp
 from project_funding_ledger.profile import profile_bp
 from project_funding_ledger.supabase_client import save_supabase_session
+from project_funding_ledger.queue.webhooks import tasks_bp
+from project_funding_ledger.routes.org_import import org_import_bp
 
 # Load environment variables from .env file
 load_dotenv()
@@ -26,13 +28,27 @@ def create_app(test_config=None):
     # Register blueprints
     app.register_blueprint(auth_bp)
     app.register_blueprint(profile_bp)
+    app.register_blueprint(tasks_bp)
+    app.register_blueprint(org_import_bp)
+
 
     # After-request hook to persist refreshed Supabase tokens in session cookie
     app.after_request(save_supabase_session)
 
     @app.route('/')
     def index():
-        # Redirect index to profile page
+        # Redirect index to admin dashboard if System Administrator, else profile page
+        from project_funding_ledger.supabase_client import get_supabase_client
+        client = get_supabase_client()
+        try:
+            user_res = client.auth.get_user()
+            user = user_res.user if user_res else None
+            if user:
+                profile_res = client.table('user_profile').select('user_type').eq('auth_user_id', user.id).execute()
+                if profile_res.data and profile_res.data[0].get('user_type') == 'System Administrator':
+                    return redirect(url_for('org_import.admin_dashboard'))
+        except Exception:
+            pass
         return redirect(url_for('profile.profile_page'))
 
     @app.route('/hello')

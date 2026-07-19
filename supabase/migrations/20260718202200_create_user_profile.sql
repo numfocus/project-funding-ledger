@@ -127,22 +127,3 @@ create trigger check_user_profile_update
     for each row
     execute function public.check_profile_update();
 
--- Automatic user_profile creation on new auth signups
-create or replace function public.handle_new_user()
-returns trigger as $$
-begin
-    insert into public.user_profile (auth_user_id, email, full_name, user_type, status)
-    values (
-        new.id,
-        new.email,
-        coalesce(new.raw_user_meta_data->>'full_name', ''),
-        'Project Stakeholder', -- default role
-        'Active'               -- default status
-    );
-    return new;
-end;
-$$ language plpgsql security definer set search_path = public;
-
-create trigger on_auth_user_created
-    after insert on auth.users
-    for each row execute function public.handle_new_user();

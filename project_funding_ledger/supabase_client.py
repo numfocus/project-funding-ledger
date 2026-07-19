@@ -1,5 +1,5 @@
 import os
-from flask import g, session
+from flask import g, session, has_request_context
 from supabase import create_client, Client
 
 def get_supabase_client() -> Client:
@@ -23,18 +23,20 @@ def get_supabase_client() -> Client:
         g.supabase_client = create_client(url, key)
         
         # Restore user session if tokens exist in the secure Flask session cookie
-        access_token = session.get("access_token")
-        refresh_token = session.get("refresh_token")
-        if access_token and refresh_token:
-            try:
-                g.supabase_client.auth.set_session(access_token, refresh_token)
-            except Exception:
-                # Token refresh might have failed (e.g. if the local supabase container was reset).
-                # Clear invalid session tokens.
-                session.pop("access_token", None)
-                session.pop("refresh_token", None)
+        if has_request_context():
+            access_token = session.get("access_token")
+            refresh_token = session.get("refresh_token")
+            if access_token and refresh_token:
+                try:
+                    g.supabase_client.auth.set_session(access_token, refresh_token)
+                except Exception:
+                    # Token refresh might have failed (e.g. if the local supabase container was reset).
+                    # Clear invalid session tokens.
+                    session.pop("access_token", None)
+                    session.pop("refresh_token", None)
                 
     return g.supabase_client
+
 
 def save_supabase_session(response):
     """
