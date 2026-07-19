@@ -10,7 +10,7 @@ Install `just`.
 
 Install Node.js and [Supabase](https://supabase.com/docs/guides/local-development).
 
-Install Docker.
+Install Docker. Start the Docker engine.
 
 Create a development env file.
 
@@ -23,7 +23,7 @@ Edit the `.env` file to include the `Publishable` key from the `npx supabase sta
 First time only or if you change the seed data, populate the database:
 
 ```
-npx supabase db reset
+just dev-db-reset
 ```
 
 Run the supabase local development server and the flask development server:
