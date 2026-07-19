@@ -1,0 +1,672 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>PFL — Project Funding Ledger</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F5F6F3;
+    --surface:#FFFFFF;
+    --ink:#14213D;
+    --ink-soft:#5B6472;
+    --ink-faint:#8A93A3;
+    --line:#DEE2E7;
+    --line-strong:#C7CDD6;
+    --navy:#22315A;
+    --navy-deep:#14213D;
+    --mapped:#1F7A5E;
+    --mapped-bg:#E7F3EE;
+    --exception:#AD6B22;
+    --exception-bg:#FBEEDD;
+    --overdue:#A8402F;
+    --overdue-bg:#FBE9E5;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0; background:var(--paper); color:var(--ink); font-family:'IBM Plex Sans',system-ui,sans-serif; font-size:14px; -webkit-font-smoothing:antialiased;}
+  .mono{font-family:'IBM Plex Mono',monospace; font-variant-numeric:tabular-nums;}
+  a{color:inherit; text-decoration:none;}
+  button{font-family:inherit; cursor:pointer;}
+
+  /* ---------- Shell ---------- */
+  .shell{display:grid; grid-template-columns:232px 1fr; min-height:100vh;}
+
+  /* ---------- Sidebar ---------- */
+  .sidebar{background:var(--navy-deep); color:#DDE3F0; padding:22px 16px 16px; display:flex; flex-direction:column; position:sticky; top:0; height:100vh;}
+  .brand{display:flex; align-items:center; gap:10px; padding:0 6px 22px; border-bottom:1px solid rgba(255,255,255,0.08); margin-bottom:16px;}
+  .brand-mark{width:28px;height:28px;border-radius:4px; background:linear-gradient(160deg, #3B4E82, #1B2745); display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:12px; color:#EAD9B8; border:1px solid rgba(255,255,255,0.12);}
+  .brand-text{font-weight:600; font-size:14.5px; letter-spacing:0.2px; color:#F2F4F8;}
+  .brand-sub{font-size:10.5px; color:#8E9CC0; margin-top:1px; font-family:'IBM Plex Mono',monospace; letter-spacing:0.4px;}
+  .nav-group-label{font-size:10px; text-transform:uppercase; letter-spacing:0.9px; color:#66739A; margin:16px 10px 6px; font-weight:600;}
+  .nav-item{display:flex; align-items:center; gap:10px; padding:8px 10px; border-radius:5px; font-size:13.2px; color:#B9C3DC; margin-bottom:1px; cursor:pointer; border:none; background:none; width:100%; text-align:left;}
+  .nav-item:hover{background:rgba(255,255,255,0.05); color:#F2F4F8;}
+  .nav-item.active{background:#2A3A66; color:#FFFFFF; font-weight:500;}
+  .nav-icon{width:15px; height:15px; flex-shrink:0; opacity:0.85;}
+  .nav-item.active .nav-icon{opacity:1;}
+  .nav-badge{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-size:10px; background:var(--exception); color:#2B1B05; padding:1px 6px; border-radius:9px; font-weight:600;}
+  .org-switcher{display:flex; align-items:center; gap:9px; padding:9px 8px; margin-bottom:14px; border:1px solid rgba(255,255,255,0.12); border-radius:6px; background:rgba(255,255,255,0.04); cursor:pointer;}
+  .org-switcher:hover{background:rgba(255,255,255,0.07);}
+  .org-switcher-mark{width:26px;height:26px;border-radius:5px; background:#EAD9B8; color:var(--navy-deep); font-family:'IBM Plex Mono',monospace; font-weight:700; font-size:11px; display:flex;align-items:center;justify-content:center; flex-shrink:0;}
+  .org-switcher-name{font-size:12.8px; font-weight:600; color:#F2F4F8; line-height:1.2;}
+  .org-switcher-role{font-size:10px; color:#8E9CC0; margin-top:1px; font-family:'IBM Plex Mono',monospace;}
+  .org-switcher .chev{margin-left:auto; color:#7C88AC; font-size:11px;}
+
+  .doc-grid{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; padding:14px 16px;}
+  .doc-card{border:1px solid var(--line); border-radius:5px; padding:11px;}
+  .doc-card .doc-icon{margin-bottom:8px;}
+  .doc-card .doc-name{font-size:11.8px; font-weight:500; line-height:1.3;}
+  .doc-card .doc-meta{font-size:10.3px; color:var(--ink-faint); margin-top:5px; font-family:'IBM Plex Mono',monospace;}
+  .doc-card .doc-linked{font-size:10.5px; color:var(--navy); margin-top:6px; font-weight:500;}
+
+  .sidebar-footer{margin-top:auto; padding-top:14px; border-top:1px solid rgba(255,255,255,0.08); display:flex; align-items:center; gap:9px; font-size:12px; color:#9AA6C4;}
+  .avatar-sm{width:26px;height:26px;border-radius:50%; background:#3B4E82; display:flex;align-items:center;justify-content:center; font-size:11px; font-weight:600; color:#EAD9B8; font-family:'IBM Plex Mono',monospace;}
+  .role-note{font-size:10px; color:#66739A; margin-top:14px; padding:0 10px; line-height:1.5;}
+
+  /* ---------- Main ---------- */
+  .main{padding:0 0 60px;}
+  .topbar{background:var(--surface); border-bottom:1px solid var(--line); padding:14px 28px; display:flex; align-items:center; gap:14px; position:sticky; top:0; z-index:5;}
+  .crumbs{display:flex; align-items:center; gap:7px; font-size:13px; color:var(--ink-soft);}
+  .crumbs .seg{cursor:pointer;}
+  .crumbs .seg.current{color:var(--ink); font-weight:600;}
+  .crumbs .sep{color:var(--ink-faint);}
+  .topbar-spacer{flex:1;}
+  .top-search{width:250px; padding:7px 12px; border:1px solid var(--line); border-radius:6px; font-size:12.5px; color:var(--ink-faint); background:var(--paper);}
+  .icon-btn{width:32px;height:32px; border-radius:6px; border:1px solid var(--line); display:flex; align-items:center; justify-content:center; color:var(--ink-soft); background:var(--surface);}
+  .role-pill{font-size:10.5px; font-weight:600; padding:3px 9px; border-radius:20px; background:#EEF1F6; color:var(--navy); font-family:'IBM Plex Mono',monospace; letter-spacing:0.3px;}
+
+  .content{padding:22px 28px 10px; max-width:1360px;}
+  .page-head{display:flex; align-items:baseline; justify-content:space-between; margin-bottom:16px; gap:16px;}
+  .page-title{font-size:19px; font-weight:600; letter-spacing:-0.2px;}
+  .page-sub{color:var(--ink-soft); font-size:12.5px; margin-top:3px;}
+  .btn{font-size:12.5px; font-weight:600; padding:8px 14px; border-radius:6px; border:1px solid var(--line-strong); background:var(--surface); color:var(--ink);}
+  .btn-primary{background:var(--navy); border-color:var(--navy); color:#fff;}
+  .btn-ghost{border-color:transparent; color:var(--ink-soft);}
+  .head-actions{display:flex; gap:8px; flex-shrink:0;}
+
+  .stat-row{display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:20px;}
+  .stat-row.n3{grid-template-columns:repeat(3,1fr);}
+  .stat-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:15px 16px; position:relative; overflow:hidden;}
+  .stat-card::before{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--rule,var(--navy));}
+  .stat-label{font-size:11px; color:var(--ink-soft); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:8px;}
+  .stat-value{font-family:'IBM Plex Mono',monospace; font-size:23px; font-weight:600; letter-spacing:-0.3px;}
+  .stat-delta{font-size:11.5px; margin-top:6px; color:var(--ink-faint);}
+  .stat-delta.good{color:var(--mapped);}
+  .stat-delta.warn{color:var(--exception);}
+
+  .panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); overflow:hidden; margin-bottom:16px;}
+  .panel-row{display:grid; grid-template-columns:1.55fr 1fr; gap:16px; align-items:start; margin-bottom:16px;}
+  .panel-head{display:flex; align-items:center; gap:10px; padding:13px 16px; border-bottom:1px solid var(--line);}
+  .panel-head h3{font-size:13.5px; font-weight:600; margin:0;}
+  .panel-head .count{font-family:'IBM Plex Mono',monospace; font-size:11px; color:var(--ink-faint); margin-left:6px;}
+  .panel-head .view-all{margin-left:auto; font-size:11.5px; color:var(--navy); font-weight:600; cursor:pointer;}
+  .panel-foot{padding:10px 16px; border-top:1px solid var(--line); font-size:11.5px; color:var(--ink-faint);}
+
+  table{width:100%; border-collapse:collapse;}
+  thead th{text-align:left; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); font-weight:600; padding:9px 16px; border-bottom:1px solid var(--line); background:#FBFBFA;}
+  tbody td{padding:11px 16px; border-bottom:1px solid #EDEFF1; font-size:12.8px; vertical-align:middle;}
+  tbody tr:last-child td{border-bottom:none;}
+  tbody tr:hover{background:#FAFAF8;}
+  tr.clickable{cursor:pointer;}
+  .num{font-family:'IBM Plex Mono',monospace; text-align:right; font-size:12.6px;}
+  .ref{font-family:'IBM Plex Mono',monospace; color:var(--ink-soft); font-size:11.8px;}
+  .tname{font-weight:500;}
+  .tsub{color:var(--ink-faint); font-size:11px; margin-top:1px;}
+
+  .status-dot{display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:600;}
+  .status-dot::before{content:""; width:7px; height:7px; border-radius:50%; background:currentColor;}
+  .status-dot.mapped{color:var(--mapped);}
+  .status-dot.partial{color:var(--exception);}
+  .status-dot.missing{color:var(--overdue);}
+  .status-dot.reviewed{color:var(--navy);}
+  .status-dot.pending{color:var(--ink-faint);}
+
+  /* ---------- Org list (Home) ---------- */
+  .org-grid{display:grid; grid-template-columns:repeat(2,1fr); gap:14px;}
+  .org-card{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:0; overflow:hidden; cursor:pointer; transition:border-color .12s;}
+  .org-card:hover{border-color:var(--line-strong);}
+  .org-card-top{display:flex; align-items:flex-start; gap:12px; padding:16px 16px 12px;}
+  .org-mark{width:38px;height:38px;border-radius:7px; background:var(--navy-deep); color:#EAD9B8; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px; display:flex;align-items:center;justify-content:center; flex-shrink:0;}
+  .org-name{font-size:15px; font-weight:600;}
+  .org-role{font-size:11px; color:var(--ink-faint); margin-top:2px; font-family:'IBM Plex Mono',monospace;}
+  .org-metrics{display:grid; grid-template-columns:1fr 1fr; border-top:1px solid var(--line);}
+  .org-metric{padding:11px 16px; border-right:1px solid var(--line);}
+  .org-metric:last-child{border-right:none;}
+  .org-metric .v{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:14.5px;}
+  .org-metric .l{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.4px; margin-top:2px;}
+  .org-activity{padding:10px 16px; border-top:1px solid var(--line); font-size:11px; color:var(--ink-soft);}
+
+  /* ---------- Org detail ---------- */
+  .meta-panel{display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;}
+  .meta-item{padding:14px 16px; border-right:1px solid var(--line);}
+  .meta-item:last-child{border-right:none;}
+  .meta-label{font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); margin-bottom:5px;}
+  .meta-value{font-size:13px; font-weight:500;}
+  .secret-key{font-family:'IBM Plex Mono',monospace; font-size:12.5px; letter-spacing:1px; color:var(--ink-soft);}
+  .lock-badge{font-size:9.5px; color:var(--ink-faint); margin-left:6px; font-weight:600;}
+
+  .fs-item{display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid #EDEFF1; cursor:pointer;}
+  .fs-item:last-child{border-bottom:none;}
+  .fs-item:hover{background:#FAFAF8;}
+  .fs-rule{width:4px; align-self:stretch; border-radius:2px; background:var(--mapped);}
+  .fs-item.partial .fs-rule{background:var(--exception);}
+  .fs-main{flex:1; min-width:0;}
+  .fs-name{font-weight:600; font-size:13px;}
+  .fs-authority{color:var(--ink-faint); font-size:11px; margin-top:2px; font-family:'IBM Plex Mono',monospace;}
+  .fs-amounts{text-align:right;}
+  .fs-balance{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13.5px;}
+  .fs-of{color:var(--ink-faint); font-size:10.8px; font-family:'IBM Plex Mono',monospace;}
+  .fs-bar{width:100%; height:4px; background:#EEF0EE; border-radius:2px; margin-top:6px; overflow:hidden;}
+  .fs-bar > span{display:block; height:100%; background:var(--mapped);}
+  .fs-item.partial .fs-bar > span{background:var(--exception);}
+  .fs-chev{color:var(--ink-faint); font-size:14px;}
+
+  .doc-row{display:flex; align-items:center; gap:11px; padding:11px 16px; border-bottom:1px solid #EDEFF1;}
+  .doc-row:last-child{border-bottom:none;}
+  .doc-icon{width:28px; height:28px; border-radius:5px; background:var(--paper); display:flex; align-items:center; justify-content:center; font-size:9.5px; font-family:'IBM Plex Mono',monospace; font-weight:600; color:var(--navy); border:1px solid var(--line); flex-shrink:0;}
+  .doc-name{font-size:12.5px; font-weight:500;}
+  .doc-meta{font-size:10.5px; color:var(--ink-faint); margin-top:2px; font-family:'IBM Plex Mono',monospace;}
+  .doc-actions{margin-left:auto; display:flex; gap:6px;}
+  .doc-actions .icon-btn{width:26px;height:26px; font-size:11px;}
+
+  /* ---------- Funding source detail ---------- */
+  .fsd-summary{display:grid; grid-template-columns:2fr 1fr 1fr; gap:16px; margin-bottom:16px;}
+  .fsd-summary-panel{background:var(--surface); border:1px solid var(--line); border-radius:var(--radius); padding:18px 20px;}
+  .fsd-title-row{display:flex; align-items:center; gap:10px; margin-bottom:12px;}
+  .fsd-title{font-size:17px; font-weight:600;}
+  .fsd-status-pill{font-size:10.5px; font-weight:600; padding:3px 10px; border-radius:20px; background:var(--mapped-bg); color:var(--mapped); font-family:'IBM Plex Mono',monospace;}
+  .fsd-meta-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 20px;}
+  .fsd-meta-grid .k{font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); margin-bottom:3px;}
+  .fsd-meta-grid .v{font-size:12.8px; font-weight:500;}
+
+  .big-metric{text-align:left;}
+  .big-metric .ql{font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;}
+  .big-metric .qv{font-family:'IBM Plex Mono',monospace; font-size:27px; font-weight:600; letter-spacing:-0.4px;}
+  .big-metric .qs{font-size:11px; color:var(--ink-faint); margin-top:6px;}
+  .big-metric.exception .qv{color:var(--exception);}
+
+  .fsd-docs{display:flex; flex-direction:column;}
+  .fsd-doc-featured{display:flex; align-items:center; gap:12px; padding:13px 16px; border-bottom:1px solid #EDEFF1;}
+  .fsd-doc-featured:last-child{border-bottom:none;}
+  .fsd-doc-icon{width:34px;height:34px; border-radius:6px; background:var(--mapped-bg); color:var(--mapped); display:flex;align-items:center;justify-content:center; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:10px; flex-shrink:0;}
+  .fsd-doc-icon.agreement{background:#EAEEF7; color:var(--navy);}
+  .fsd-doc-title{font-size:12.8px; font-weight:600;}
+  .fsd-doc-sub{font-size:10.8px; color:var(--ink-faint); margin-top:2px;}
+
+  .tabs{display:flex; gap:2px; border-bottom:1px solid var(--line); margin-bottom:16px;}
+  .tab{padding:10px 4px; font-size:13px; font-weight:500; color:var(--ink-faint); border-bottom:2px solid transparent; margin-right:20px; cursor:pointer;}
+  .tab.active{color:var(--ink); border-bottom-color:var(--navy); font-weight:600;}
+
+  .filters{display:flex; gap:8px; padding:12px 16px; border-bottom:1px solid var(--line); flex-wrap:wrap; align-items:center;}
+  .filter-chip{font-size:11.5px; padding:6px 11px; border:1px solid var(--line); border-radius:20px; color:var(--ink-soft); display:flex; align-items:center; gap:6px;}
+  .filter-chip.active{background:var(--navy); border-color:var(--navy); color:#fff; font-weight:500;}
+
+  .adj-row{display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid #EDEFF1;}
+  .adj-row:last-child{border-bottom:none;}
+  .adj-sign{width:26px;height:26px;border-radius:50%; display:flex;align-items:center;justify-content:center; font-weight:700; font-size:14px; flex-shrink:0;}
+  .adj-sign.pos{background:var(--mapped-bg); color:var(--mapped);}
+  .adj-sign.neg{background:var(--overdue-bg); color:var(--overdue);}
+  .adj-title{font-size:12.6px; font-weight:500;}
+  .adj-meta{font-size:10.8px; color:var(--ink-faint); margin-top:2px;}
+  .adj-amt{margin-left:auto; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:13px;}
+  .adj-amt.pos{color:var(--mapped);}
+  .adj-amt.neg{color:var(--overdue);}
+
+  .hist-row{display:flex; gap:12px; padding:11px 16px; border-bottom:1px solid #EDEFF1; font-size:12px;}
+  .hist-row:last-child{border-bottom:none;}
+  .hist-time{font-family:'IBM Plex Mono',monospace; color:var(--ink-faint); font-size:11px; width:130px; flex-shrink:0;}
+  .hist-who{font-weight:600; margin-right:4px;}
+
+  .view{display:none;}
+  .view.active{display:block;}
+</style>
+</head>
+<body>
+<div class="shell">
+
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">PFL</div>
+      <div>
+        <div class="brand-text">Funding Ledger</div>
+        <div class="brand-sub">v0.2 · org-centric</div>
+      </div>
+    </div>
+
+    <div class="nav-group-label">Navigate</div>
+    <button class="nav-item active" data-goto="orgs">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="6" height="6" rx="1"/><rect x="11.5" y="2.5" width="6" height="6" rx="1"/><rect x="2.5" y="11.5" width="6" height="6" rx="1"/><rect x="11.5" y="11.5" width="6" height="6" rx="1"/></svg>
+      Home / My Orgs
+    </button>
+
+    <div id="orgNavGroup" style="display:none;">
+      <div class="org-switcher" data-goto="orgs" title="Switch org">
+        <div class="org-switcher-mark" id="sbOrgMark">SP</div>
+        <div>
+          <div class="org-switcher-name" id="sbOrgName">SciPy25</div>
+          <div class="org-switcher-role" id="sbOrgRole">Program Manager</div>
+        </div>
+        <span class="chev">⌄</span>
+      </div>
+
+      <div class="nav-group-label" id="orgNavLabel">SciPy25 Workspace</div>
+      <button class="nav-item" data-goto="org" data-nav="overview">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="3" width="14" height="14" rx="2"/><path d="M3 8.5h14"/></svg>
+        Overview
+      </button>
+      <button class="nav-item" data-goto="org" data-nav="fslist">
+        <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M3 15V5a2 2 0 012-2h6l3 3v9a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M7 9h6M7 12.5h4"/></svg>
+        Funding Sources
+      </button>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="avatar-sm">YY</div>
+      <div>
+        <div style="color:#E7EAF3; font-weight:500;">Y. Yang</div>
+        <div style="font-size:10.5px;">Program Manager</div>
+      </div>
+    </div>
+    <div class="role-note">Program Manager role · can create/edit funding sources in assigned Orgs, apply adjustments.</div>
+  </aside>
+
+  <!-- ================= MAIN ================= -->
+  <div class="main">
+
+    <div class="topbar">
+      <div class="crumbs" id="crumbs">
+        <span class="seg current" data-goto="orgs">My Orgs</span>
+      </div>
+      <div class="topbar-spacer"></div>
+      <span class="role-pill">PROGRAM MANAGER</span>
+      <input class="top-search" placeholder="Search orgs, sources, docs…" readonly>
+    </div>
+
+    <div class="content">
+
+      <!-- ============ VIEW 1: ORG LIST (HOME) ============ -->
+      <div class="view active" id="view-orgs">
+        <div class="page-head">
+          <div>
+            <div class="page-title">My Orgs</div>
+            <div class="page-sub">4 organizations you have access to</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn">+ New Org <span style="color:var(--ink-faint); font-weight:400;">(admin)</span></button>
+          </div>
+        </div>
+
+        <div class="filters" style="border:1px solid var(--line); border-radius:6px; margin-bottom:16px; background:var(--surface);">
+          <span class="filter-chip active">All orgs</span>
+          <span class="filter-chip">Owned by me</span>
+          <span class="filter-chip">Recent activity</span>
+        </div>
+
+        <div class="org-grid">
+          <div class="org-card" data-goto="org">
+            <div class="org-card-top">
+              <div class="org-mark">SP</div>
+              <div>
+                <div class="org-name">SciPy25</div>
+                <div class="org-role">Program Manager · owner team: Scientific Computing Fdn</div>
+              </div>
+            </div>
+            <div class="org-metrics">
+              <div class="org-metric"><div class="v">$498,820</div><div class="l">Available funding</div></div>
+              <div class="org-metric"><div class="v">5</div><div class="l">Funding sources</div></div>
+            </div>
+            <div class="org-activity">248 transactions · last import Jul 15, 2026</div>
+          </div>
+
+          <div class="org-card">
+            <div class="org-card-top">
+              <div class="org-mark">SP</div>
+              <div>
+                <div class="org-name">SciPy26</div>
+                <div class="org-role">Org Leader (view-only) · owner team: Scientific Computing Fdn</div>
+              </div>
+            </div>
+            <div class="org-metrics">
+              <div class="org-metric"><div class="v">$118,900</div><div class="l">Available funding</div></div>
+              <div class="org-metric"><div class="v">2</div><div class="l">Funding sources</div></div>
+            </div>
+            <div class="org-activity">31 transactions · last import Jul 11, 2026</div>
+          </div>
+
+          <div class="org-card">
+            <div class="org-card-top">
+              <div class="org-mark">MP</div>
+              <div>
+                <div class="org-name">MatPlotLib</div>
+                <div class="org-role">Program Manager · owner team: Data Viz Consortium</div>
+              </div>
+            </div>
+            <div class="org-metrics">
+              <div class="org-metric"><div class="v">$904,015</div><div class="l">Available funding</div></div>
+              <div class="org-metric"><div class="v">6</div><div class="l">Funding sources</div></div>
+            </div>
+            <div class="org-activity">512 transactions · last import Jul 17, 2026</div>
+          </div>
+
+          <div class="org-card">
+            <div class="org-card-top">
+              <div class="org-mark">NP</div>
+              <div>
+                <div class="org-name">NumPy</div>
+                <div class="org-role">Org Leader (view-only) · owner team: Array Computing Group</div>
+              </div>
+            </div>
+            <div class="org-metrics">
+              <div class="org-metric"><div class="v">$62,410</div><div class="l">Available funding</div></div>
+              <div class="org-metric"><div class="v">3</div><div class="l">Funding sources</div></div>
+            </div>
+            <div class="org-activity">89 transactions · last import Jul 9, 2026</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ VIEW 2: ORG DETAIL ============ -->
+      <div class="view" id="view-org">
+        <div class="page-head">
+          <div>
+            <div class="page-title">SciPy25</div>
+            <div class="page-sub">Owner team: Scientific Computing Fdn · Program Manager access</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn">Export Transactions CSV</button>
+            <button class="btn btn-primary">+ New Funding Source</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Org Metadata</h3><span style="margin-left:auto; font-size:11px; color:var(--ink-faint);">Admin-only fields locked</span></div>
+          <div class="meta-panel">
+            <div class="meta-item">
+              <div class="meta-label">Org Name</div>
+              <div class="meta-value">SciPy25</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Owner / Team</div>
+              <div class="meta-value">Scientific Computing Fdn</div>
+            </div>
+            <div class="meta-item">
+              <div class="meta-label">Data Mapping Key <span class="lock-badge">🔒 ADMIN</span></div>
+              <div class="meta-value secret-key">SCPY25-••••-••41</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="stat-row n3">
+          <div class="stat-card" style="--rule:var(--mapped)">
+            <div class="stat-label">Total Available Funding</div>
+            <div class="stat-value">$498,820</div>
+            <div class="stat-delta good">↑ $12,400 since last import</div>
+          </div>
+          <div class="stat-card" style="--rule:var(--navy)">
+            <div class="stat-label">Total Transactions</div>
+            <div class="stat-value">248</div>
+            <div class="stat-delta">across 5 funding sources</div>
+          </div>
+          <div class="stat-card" style="--rule:var(--exception)">
+            <div class="stat-label">Unmapped / Pending</div>
+            <div class="stat-value">7</div>
+            <div class="stat-delta warn">from batch IMP-0231</div>
+          </div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel">
+            <div class="panel-head"><h3>Funding Sources</h3><span class="count">5</span></div>
+            <div>
+              <div class="fs-item" data-goto="fs">
+                <div class="fs-rule"></div>
+                <div class="fs-main">
+                  <div class="fs-name">City CDBG Grant</div>
+                  <div class="fs-authority">Municipal Grant Agmt 2025-114 · Active</div>
+                  <div class="fs-bar"><span style="width:78%"></span></div>
+                </div>
+                <div class="fs-amounts"><div class="fs-balance">$212,400</div><div class="fs-of">of $500,000</div></div>
+                <span class="fs-chev">›</span>
+              </div>
+              <div class="fs-item">
+                <div class="fs-rule"></div>
+                <div class="fs-main">
+                  <div class="fs-name">State Youth Fund</div>
+                  <div class="fs-authority">SYF Cycle 12 Award · Active</div>
+                  <div class="fs-bar"><span style="width:54%"></span></div>
+                </div>
+                <div class="fs-amounts"><div class="fs-balance">$97,300</div><div class="fs-of">of $180,000</div></div>
+                <span class="fs-chev">›</span>
+              </div>
+              <div class="fs-item partial">
+                <div class="fs-rule"></div>
+                <div class="fs-main">
+                  <div class="fs-name">Local Match Fund</div>
+                  <div class="fs-authority">Council Res. 22-410 · Active</div>
+                  <div class="fs-bar"><span style="width:31%"></span></div>
+                </div>
+                <div class="fs-amounts"><div class="fs-balance">$41,020</div><div class="fs-of">of $130,000</div></div>
+                <span class="fs-chev">›</span>
+              </div>
+              <div class="fs-item">
+                <div class="fs-rule"></div>
+                <div class="fs-main">
+                  <div class="fs-name">Private Foundation Gift</div>
+                  <div class="fs-authority">Donor Agmt PF-0091 · Active</div>
+                  <div class="fs-bar"><span style="width:96%"></span></div>
+                </div>
+                <div class="fs-amounts"><div class="fs-balance">$135,500</div><div class="fs-of">of $141,000</div></div>
+                <span class="fs-chev">›</span>
+              </div>
+              <div class="fs-item">
+                <div class="fs-rule" style="background:var(--ink-faint);"></div>
+                <div class="fs-main">
+                  <div class="fs-name">General</div>
+                  <div class="fs-authority">Unrestricted · no governing agreement · Active</div>
+                  <div class="fs-bar"><span style="width:100%; background:var(--ink-faint);"></span></div>
+                </div>
+                <div class="fs-amounts"><div class="fs-balance">$12,600</div><div class="fs-of">unrestricted</div></div>
+                <span class="fs-chev">›</span>
+              </div>
+            </div>
+            <div class="panel-foot">Every Org includes a General funding source for unrestricted activity not tied to a specific grant or agreement.</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Recent Activity</h3></div>
+            <div class="doc-row">
+              <div class="doc-icon">TXN</div>
+              <div>
+                <div class="doc-name">Site clearing — Phase 1 mapped to City CDBG Grant</div>
+                <div class="doc-meta">2 hours ago · $42,880.00</div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-icon">PDF</div>
+              <div>
+                <div class="doc-name">Donor Agreement PF-0091 uploaded</div>
+                <div class="doc-meta">Yesterday · Private Foundation Gift</div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-icon">TXN</div>
+              <div>
+                <div class="doc-name">Equipment rental flagged as exception</div>
+                <div class="doc-meta">Yesterday · $8,450.00</div>
+              </div>
+            </div>
+            <div class="doc-row">
+              <div class="doc-icon">IMP</div>
+              <div>
+                <div class="doc-name">Batch IMP-0231 imported — 62 transactions</div>
+                <div class="doc-meta">Jul 15, 2026</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ VIEW 3: FUNDING SOURCE DETAIL ============ -->
+      <div class="view" id="view-fs">
+        <div class="page-head">
+          <div>
+            <div class="page-title">City CDBG Grant</div>
+            <div class="page-sub">SciPy25 · Municipal Grant Agmt 2025-114</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-primary">Apply Adjustment</button>
+          </div>
+        </div>
+
+        <div class="fsd-summary">
+          <div class="fsd-summary-panel">
+            <div class="fsd-title-row">
+              <div class="fsd-title">Funding Source Summary</div>
+              <span class="fsd-status-pill">ACTIVE</span>
+            </div>
+            <div class="fsd-meta-grid">
+              <div><div class="k">Authority</div><div class="v">Municipal Grant Agmt 2025-114</div></div>
+              <div><div class="k">Org</div><div class="v">SciPy25</div></div>
+              <div><div class="k">Effective Dates</div><div class="v">Jan 1, 2026 – Dec 31, 2027</div></div>
+              <div><div class="k">Total Awarded</div><div class="v mono">$500,000.00</div></div>
+            </div>
+          </div>
+          <div class="fsd-summary-panel big-metric">
+            <div class="ql">How much money is left?</div>
+            <div class="qv">$212,400</div>
+            <div class="qs">42% of $500,000 remaining</div>
+          </div>
+          <div class="fsd-summary-panel big-metric exception">
+            <div class="ql">Transactions left</div>
+            <div class="qv">12</div>
+            <div class="qs">4 unmapped · 8 pending review</div>
+          </div>
+        </div>
+
+        <div class="panel-row">
+          <div class="panel">
+            <div class="panel-head"><h3>Recent Transactions</h3><span class="count">12 remaining</span><button class="btn" style="margin-left:auto; padding:6px 11px; font-size:11.5px;">Export CSV</button></div>
+            <div class="filters">
+              <span class="filter-chip active">All</span>
+              <span class="filter-chip">Unmapped</span>
+              <span class="filter-chip">Reviewed</span>
+            </div>
+            <table>
+              <thead><tr><th>Date</th><th>Transaction</th><th>Type</th><th>Status</th><th style="text-align:right">Amount</th></tr></thead>
+              <tbody>
+                <tr>
+                  <td class="ref">Jul 15</td>
+                  <td><div class="tname">Site clearing — Phase 1</div><div class="tsub">ref <span class="ref">QBO-88214</span></div></td>
+                  <td class="ref">Expense</td>
+                  <td><span class="status-dot mapped">Mapped</span></td>
+                  <td class="num">$42,880.00</td>
+                </tr>
+                <tr>
+                  <td class="ref">Jul 15</td>
+                  <td><div class="tname">Design consultant invoice #14</div><div class="tsub">ref <span class="ref">QBO-88231</span></div></td>
+                  <td class="ref">Expense</td>
+                  <td><span class="status-dot mapped">Mapped</span></td>
+                  <td class="num">$11,020.50</td>
+                </tr>
+                <tr>
+                  <td class="ref">Jul 15</td>
+                  <td><div class="tname">Equipment rental — excavator</div><div class="tsub">ref <span class="ref">QBO-88227</span></div></td>
+                  <td class="ref">Expense</td>
+                  <td><span class="status-dot missing">Unmapped</span></td>
+                  <td class="num">$8,450.00</td>
+                </tr>
+                <tr>
+                  <td class="ref">Jul 10</td>
+                  <td><div class="tname">Permit fee reimbursement</div><div class="tsub">ref <span class="ref">QBO-88190</span></div></td>
+                  <td class="ref">Expense</td>
+                  <td><span class="status-dot reviewed">Reviewed</span></td>
+                  <td class="num">$1,240.00</td>
+                </tr>
+                <tr>
+                  <td class="ref">Jul 8</td>
+                  <td><div class="tname">Grant disbursement — Q3 draw</div><div class="tsub">ref <span class="ref">QBO-88175</span></div></td>
+                  <td class="ref">Deposit</td>
+                  <td><span class="status-dot pending">Pending</span></td>
+                  <td class="num">$85,000.00</td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="panel-foot">Showing 5 of 12 remaining</div>
+          </div>
+
+          <div class="panel">
+            <div class="panel-head"><h3>Documents</h3><span class="count">3 linked</span></div>
+            <div class="fsd-docs">
+              <div class="fsd-doc-featured">
+                <div class="fsd-doc-icon">LTR</div>
+                <div>
+                  <div class="fsd-doc-title">Funding Letter</div>
+                  <div class="fsd-doc-sub">Grant-Letter-2025-114.pdf · 340 KB</div>
+                </div>
+              </div>
+              <div class="fsd-doc-featured">
+                <div class="fsd-doc-icon agreement">AGR</div>
+                <div>
+                  <div class="fsd-doc-title">Funding Agreement</div>
+                  <div class="fsd-doc-sub">CDBG-Agreement-2025-114-v2.pdf · 2.4 MB</div>
+                </div>
+              </div>
+              <div class="fsd-doc-featured">
+                <div class="fsd-doc-icon">XLS</div>
+                <div>
+                  <div class="fsd-doc-title">Q2 Expenditure Backup</div>
+                  <div class="fsd-doc-sub">890 KB · v1</div>
+                </div>
+              </div>
+            </div>
+            <div class="panel-foot">3 documents linked to this funding source</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+  const views = {orgs:'view-orgs', org:'view-org', fs:'view-fs'};
+  const navKeyFor = {orgs:'orgs', org:'overview', fs:'fslist'};
+  const crumbTrails = {
+    orgs:    [{label:'My Orgs', goto:'orgs'}],
+    org:     [{label:'My Orgs', goto:'orgs'}, {label:'SciPy25', goto:'org'}],
+    fs:      [{label:'My Orgs', goto:'orgs'}, {label:'SciPy25', goto:'org'}, {label:'City CDBG Grant', goto:'fs'}]
+  };
+
+  function go(key){
+    Object.values(views).forEach(id => document.getElementById(id).classList.remove('active'));
+    document.getElementById(views[key]).classList.add('active');
+
+    const inOrgContext = key !== 'orgs';
+    document.getElementById('orgNavGroup').style.display = inOrgContext ? 'block' : 'none';
+
+    // nav active state
+    document.querySelectorAll('.nav-item[data-goto]').forEach(el => el.classList.remove('active'));
+    const activeNavKey = navKeyFor[key];
+    let navMatch = document.querySelector('.nav-item[data-nav="'+ activeNavKey +'"]');
+    if(!navMatch && !inOrgContext) navMatch = document.querySelector('.nav-item[data-goto="orgs"]');
+    if(navMatch) navMatch.classList.add('active');
+
+    // breadcrumbs
+    const crumbEl = document.getElementById('crumbs');
+    crumbEl.innerHTML = crumbTrails[key].map((c,i,arr) => {
+      const isLast = i === arr.length - 1;
+      return `<span class="seg ${isLast ? 'current' : ''}" data-goto="${c.goto}">${c.label}</span>` + (isLast ? '' : `<span class="sep">/</span>`);
+    }).join('');
+    crumbEl.querySelectorAll('.seg').forEach(seg => seg.addEventListener('click', () => go(seg.dataset.goto)));
+
+    window.scrollTo(0,0);
+  }
+  document.querySelectorAll('[data-goto]').forEach(el => el.addEventListener('click', () => go(el.dataset.goto)));
+  go('orgs');
+</script>
+</body>
+</html>
