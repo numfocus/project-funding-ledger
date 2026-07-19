@@ -69,7 +69,7 @@ def profile_page():
         user_profile = {
             'email': user.email,
             'full_name': user.user_metadata.get('full_name', 'N/A'),
-            'user_type': 'Project Stakeholder',
+            'user_type': 'Organization Stakeholder',
             'status': 'Active'
         }
         

@@ -16,10 +16,13 @@ do $$
 declare
     v_admin_id uuid := 'a1111111-1111-1111-1111-111111111111';
     v_manager_id uuid := 'b2222222-2222-2222-2222-222222222222';
+    v_stakeholder_id uuid := 'c3333333-3333-3333-3333-333333333333';
     v_admin_email text := 'admin@example.com';
     v_manager_email text := 'manager@example.com';
+    v_stakeholder_email text := 'stakeholder@example.com';
     v_admin_pwd text := 'adminpassword';
     v_manager_pwd text := 'managerpassword';
+    v_stakeholder_pwd text := 'stakeholderpassword';
 begin
     -- 1. Create System Administrator Auth User
     insert into auth.users (
@@ -140,6 +143,57 @@ begin
         v_manager_email,
         'Fred Flintstone',
 		'Program Manager',
+        'Active'
+    );
+    
+	-- 3. Create Organization Stakeholder Auth User
+    insert into auth.users (
+        id,
+        instance_id,
+        aud,
+        role,
+        email,
+        encrypted_password,
+        email_confirmed_at,
+        raw_app_meta_data,
+        raw_user_meta_data,
+        created_at,
+        updated_at,
+        confirmation_token,
+        recovery_token,
+        email_change_token_new,
+        email_change,
+        phone_change_token,
+        email_change_token_current,
+        reauthentication_token
+    ) values (
+        v_stakeholder_id,
+        '00000000-0000-0000-0000-000000000000',
+        'authenticated',
+        'authenticated',
+        v_stakeholder_email,
+        crypt(v_stakeholder_pwd, gen_salt('bf')),
+        now(),
+        '{"provider":"email","providers":["email"]}',
+        '{"full_name": "Barney Rubble"}',
+        now(),
+        now(),
+        '',
+        '',
+        '',
+        '',
+        '',
+        '',
+        ''
+    );
+
+    insert into public.user_profile (id, auth_user_id, email, full_name, user_type, status)
+    values (
+        v_stakeholder_id,
+        v_stakeholder_id,
+        v_stakeholder_email,
+        'Barney Rubble',
+		'Organization Stakeholder',
         'Active'
     );
 

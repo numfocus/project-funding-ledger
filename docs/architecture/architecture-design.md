@@ -1685,7 +1685,7 @@ activities associated with Projects, Funding Sources, and Governing
 Agreements.
 
 Reporting Obligations should be visible to authorized Program Managers
-and Fiscally Sponsored Project Stakeholders based on Project
+and Fiscally Sponsored Organization Stakeholders based on Project
 Permissions.
 
 The system tracks reporting obligations, due dates, reporting periods,
@@ -2042,7 +2042,7 @@ Key Fields
 | full_name | text | Yes | User full name |
 | email | text | Yes | User email address |
 | organization_affiliation | text | No | Organization, institution, or project affiliation |
-| user_type | text | Yes | System Administrator, Finance Administrator, Program Manager, Project Stakeholder |
+| user_type | text | Yes | System Administrator, Finance Administrator, Program Manager, Organization Stakeholder |
 | status | text | Yes | Active, Invited, Inactive, Suspended |
 | last_login_at | timestamp | No | Last known login |
 | created_at | timestamp | Yes | Record creation timestamp |

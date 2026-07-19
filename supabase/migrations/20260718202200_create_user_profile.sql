@@ -9,7 +9,7 @@ create table public.user_profile (
     user_type text not null check (user_type in (
         'System Administrator',
         'Program Manager',
-        'Project Stakeholder'
+        'Organization Stakeholder'
     )),
     status text not null check (status in (
         'Active',
