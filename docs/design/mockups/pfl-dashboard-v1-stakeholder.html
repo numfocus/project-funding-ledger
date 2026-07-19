@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PFL — Project Funding Ledger</title>
+<title>PFL — Project Funding Ledger (Stakeholder)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -189,7 +189,6 @@
 
   .link-btn{font-size:11.5px; color:var(--navy); font-weight:600; cursor:pointer; background:none; border:none; padding:0; font-family:inherit;}
   .form-panel{padding:16px;}
-  #fsMetaEdit{padding:0;}
   .form-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
   .form-row.full{grid-template-columns:1fr;}
   .form-field label{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); margin-bottom:5px; font-weight:600;}
@@ -273,7 +272,7 @@
         <div class="org-switcher-mark" id="sbOrgMark">SP</div>
         <div>
           <div class="org-switcher-name" id="sbOrgName">SciPy25</div>
-          <div class="org-switcher-role" id="sbOrgRole">Program Manager</div>
+          <div class="org-switcher-role" id="sbOrgRole">Project Stakeholder</div>
         </div>
         <span class="chev">⌄</span>
       </div>
@@ -290,13 +289,13 @@
     </div>
 
     <div class="sidebar-footer">
-      <div class="avatar-sm">YY</div>
+      <div class="avatar-sm">JR</div>
       <div>
-        <div style="color:#E7EAF3; font-weight:500;">Y. Yang</div>
-        <div style="font-size:10.5px;">Program Manager</div>
+        <div style="color:#E7EAF3; font-weight:500;">J. Rivera</div>
+        <div style="font-size:10.5px;">Project Stakeholder</div>
       </div>
     </div>
-    <div class="role-note">Program Manager role · can create/edit Orgs, create/edit funding sources in assigned Orgs, apply adjustments.</div>
+    <div class="role-note">Project Stakeholder role · read-only access to Orgs you're part of. Export transaction CSVs at the Org or Funding Source level.</div>
   </aside>
 
   <!-- ================= MAIN ================= -->
@@ -307,7 +306,7 @@
         <span class="seg current" data-goto="orgs">My Orgs</span>
       </div>
       <div class="topbar-spacer"></div>
-      <span class="role-pill">PROGRAM MANAGER</span>
+      <span class="role-pill">PROJECT STAKEHOLDER</span>
       <input class="top-search" placeholder="Search orgs, sources, docs…" readonly>
     </div>
 
@@ -318,10 +317,7 @@
         <div class="page-head">
           <div>
             <div class="page-title">My Orgs</div>
-            <div class="page-sub">4 organizations you have access to</div>
-          </div>
-          <div class="head-actions">
-            <button class="btn btn-primary">+ New Organization</button>
+            <div class="page-sub">2 organizations you have access to</div>
           </div>
         </div>
 
@@ -359,34 +355,6 @@
               <div class="org-metric"><div class="v">2</div><div class="l">Funding sources</div></div>
             </div>
           </div>
-
-          <div class="org-card">
-            <div class="org-card-top">
-              <div class="org-mark">MP</div>
-              <div>
-                <div class="org-name">MatPlotLib</div>
-              </div>
-              <span class="org-status-pill active">Active</span>
-            </div>
-            <div class="org-metrics">
-              <div class="org-metric"><div class="v">$904,015</div><div class="l">Available funding</div></div>
-              <div class="org-metric"><div class="v">6</div><div class="l">Funding sources</div></div>
-            </div>
-          </div>
-
-          <div class="org-card">
-            <div class="org-card-top">
-              <div class="org-mark">NP</div>
-              <div>
-                <div class="org-name">NumPy</div>
-              </div>
-              <span class="org-status-pill active">Active</span>
-            </div>
-            <div class="org-metrics">
-              <div class="org-metric"><div class="v">$62,410</div><div class="l">Available funding</div></div>
-              <div class="org-metric"><div class="v">3</div><div class="l">Funding sources</div></div>
-            </div>
-          </div>
         </div>
       </div>
 
@@ -398,16 +366,14 @@
           </div>
           <div class="head-actions">
             <button class="btn">Export Transactions CSV</button>
-            <button class="btn btn-primary">+ New Funding Source</button>
           </div>
         </div>
 
         <div class="panel">
-          <div class="panel-head"><h3>Organization Metadata</h3><button class="link-btn" style="margin-left:auto;" onclick="toggleOrgEdit()">Edit</button></div>
-
-          <div class="meta-panel" id="orgMetaView" style="grid-template-columns:1fr 1fr 1fr;">
+          <div class="panel-head"><h3>Organization Metadata</h3></div>
+          <div class="meta-panel">
             <div class="meta-item">
-              <div class="meta-label">Organization Name</div>
+              <div class="meta-label">Org Name</div>
               <div class="meta-value">SciPy25</div>
             </div>
             <div class="meta-item">
@@ -416,21 +382,7 @@
             </div>
             <div class="meta-item">
               <div class="meta-label">Status</div>
-              <div class="meta-value">Active <span style="color:var(--ink-faint); font-weight:400;">· created Jan 3, 2026</span></div>
-            </div>
-          </div>
-
-          <div class="form-panel" id="orgMetaEdit" style="display:none;">
-            <div class="form-row" style="grid-template-columns:1fr 1fr 1fr;">
-              <div class="form-field"><label>Organization Name</label><input value="SciPy25"></div>
-              <div class="form-field"><label>Owner / Team</label><input value="Scientific Computing Fdn"></div>
-              <div class="form-field"><label>Status</label>
-                <select><option>Active</option><option>Archived</option></select>
-              </div>
-            </div>
-            <div class="form-actions">
-              <button class="btn" onclick="toggleOrgEdit()">Cancel</button>
-              <button class="btn btn-primary" onclick="toggleOrgEdit()">Save Changes</button>
+              <div class="meta-value">Active</div>
             </div>
           </div>
         </div>
@@ -552,9 +504,6 @@
             <div class="page-title">City CDBG Grant</div>
             <div class="page-sub">SciPy25 · Municipal Grant Agmt 2025-114</div>
           </div>
-          <div class="head-actions">
-            <button class="btn btn-primary">Apply Adjustment</button>
-          </div>
         </div>
 
         <div class="fsd-summary">
@@ -562,7 +511,6 @@
             <div class="fsd-title-row">
               <div class="fsd-title">Funding Source Summary</div>
               <span class="fsd-status-pill" id="fsStatusPillView">ACTIVE</span>
-              <button class="link-btn" style="margin-left:auto;" onclick="toggleFsEdit()">Edit</button>
             </div>
 
             <div class="fsd-meta-grid" id="fsMetaView">
@@ -570,27 +518,6 @@
               <div><div class="k">Org</div><div class="v">SciPy25</div></div>
               <div><div class="k">Effective Dates</div><div class="v">Jan 1, 2026 – Dec 31, 2027</div></div>
               <div><div class="k">Total Awarded</div><div class="v mono">$500,000.00</div></div>
-            </div>
-
-            <div class="form-panel" id="fsMetaEdit" style="display:none;">
-              <div class="form-row full">
-                <div class="form-field"><label>Authority</label><input value="Municipal Grant Agmt 2025-114"></div>
-              </div>
-              <div class="form-row">
-                <div class="form-field"><label>Effective Start</label><input value="2026-01-01"></div>
-                <div class="form-field"><label>Effective End</label><input value="2027-12-31"></div>
-              </div>
-              <div class="form-row">
-                <div class="form-field"><label>Total Awarded</label><input value="500000.00"></div>
-                <div class="form-field"><label>Status</label>
-                  <select><option selected>Active</option><option>Closed</option><option>Archived</option></select>
-                </div>
-              </div>
-              <div style="font-size:10.5px; color:var(--ink-faint); margin-bottom:12px;">Org (SciPy25) can't be changed after the funding source is created.</div>
-              <div class="form-actions">
-                <button class="btn" onclick="toggleFsEdit()">Cancel</button>
-                <button class="btn btn-primary" onclick="toggleFsEdit()">Save Changes</button>
-              </div>
             </div>
           </div>
           <div class="fsd-summary-panel big-metric">
@@ -706,7 +633,7 @@
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h3>Documents</h3><span class="count" id="docCount">3 linked</span><button class="btn" style="margin-left:auto; padding:6px 11px; font-size:11.5px;" onclick="toggleDocUpload()">+ Upload</button></div>
+            <div class="panel-head"><h3>Documents</h3><span class="count">3 linked</span></div>
             <div class="fsd-docs">
               <div class="fsd-doc-featured">
                 <div class="fsd-doc-icon">LTR</div>
@@ -734,19 +661,6 @@
               </div>
             </div>
 
-            <div class="form-panel" id="docUploadForm" style="display:none; padding:14px 16px; border-top:1px solid var(--line);">
-              <div class="form-row">
-                <div class="form-field"><label>Document Type</label>
-                  <select><option>Award Letter</option><option>Grant Agreement</option><option>Grant Amendment</option><option>Approved Budget</option><option>Funding Correspondence</option><option>Other</option></select>
-                </div>
-                <div class="form-field"><label>File</label><input type="file"></div>
-              </div>
-              <div class="form-actions">
-                <button class="btn" onclick="toggleDocUpload()">Cancel</button>
-                <button class="btn btn-primary" onclick="toggleDocUpload()">Upload</button>
-              </div>
-            </div>
-
             <div class="panel-foot">3 documents linked to this funding source</div>
           </div>
         </div>
@@ -771,27 +685,6 @@
     const isOpen = detail.style.display === 'table-row';
     detail.style.display = isOpen ? 'none' : 'table-row';
     btn.classList.toggle('open', !isOpen);
-  }
-
-  function toggleDocUpload(){
-    const form = document.getElementById('docUploadForm');
-    form.style.display = (form.style.display === 'none') ? 'block' : 'none';
-  }
-
-  function toggleOrgEdit(){
-    const view = document.getElementById('orgMetaView');
-    const edit = document.getElementById('orgMetaEdit');
-    const editing = edit.style.display !== 'none';
-    edit.style.display = editing ? 'none' : 'block';
-    view.style.display = editing ? 'grid' : 'none';
-  }
-
-  function toggleFsEdit(){
-    const view = document.getElementById('fsMetaView');
-    const edit = document.getElementById('fsMetaEdit');
-    const editing = edit.style.display !== 'none';
-    edit.style.display = editing ? 'none' : 'block';
-    view.style.display = editing ? 'grid' : 'none';
   }
 
   function go(key){

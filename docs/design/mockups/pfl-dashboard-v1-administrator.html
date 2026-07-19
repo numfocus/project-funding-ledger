@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>PFL — Project Funding Ledger</title>
+<title>PFL — Project Funding Ledger (Admin)</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -138,11 +138,6 @@
   .org-metric .v{font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:14.5px;}
   .org-metric .l{font-size:10px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.4px; margin-top:2px;}
   .org-activity{padding:10px 16px; border-top:1px solid var(--line); font-size:11px; color:var(--ink-soft);}
-  .org-status-pill{font-size:9.5px; font-weight:600; padding:2px 8px; border-radius:20px; font-family:'IBM Plex Mono',monospace; letter-spacing:0.3px;}
-  .org-status-pill.active{background:var(--mapped-bg); color:var(--mapped);}
-  .org-status-pill.archived{background:#EEF0F2; color:var(--ink-faint);}
-  .org-card-top{position:relative;}
-  .org-card-top .org-status-pill{position:absolute; top:16px; right:16px;}
 
   /* ---------- Org detail ---------- */
   .meta-panel{display:grid; grid-template-columns:1fr 1fr 1fr; gap:0;}
@@ -187,15 +182,6 @@
   .fsd-meta-grid .k{font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); margin-bottom:3px;}
   .fsd-meta-grid .v{font-size:12.8px; font-weight:500;}
 
-  .link-btn{font-size:11.5px; color:var(--navy); font-weight:600; cursor:pointer; background:none; border:none; padding:0; font-family:inherit;}
-  .form-panel{padding:16px;}
-  #fsMetaEdit{padding:0;}
-  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
-  .form-row.full{grid-template-columns:1fr;}
-  .form-field label{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); margin-bottom:5px; font-weight:600;}
-  .form-field input, .form-field select{width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:5px; font-size:12.8px; font-family:inherit; color:var(--ink); background:var(--surface);}
-  .form-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:4px;}
-
   .big-metric{text-align:left;}
   .big-metric .ql{font-size:11.5px; color:var(--ink-soft); margin-bottom:6px;}
   .big-metric .qv{font-family:'IBM Plex Mono',monospace; font-size:27px; font-weight:600; letter-spacing:-0.4px;}
@@ -237,6 +223,37 @@
   .view{display:none;}
   .view.active{display:block;}
 
+  /* ---------- Admin additions ---------- */
+  .org-status-pill{font-size:9.5px; font-weight:600; padding:2px 8px; border-radius:20px; font-family:'IBM Plex Mono',monospace; letter-spacing:0.3px;}
+  .org-status-pill.active{background:var(--mapped-bg); color:var(--mapped);}
+  .org-status-pill.archived{background:#EEF0F2; color:var(--ink-faint);}
+  .org-card-top{position:relative;}
+  .org-card-top .org-status-pill{position:absolute; top:16px; right:16px;}
+
+  .form-panel{padding:16px;}
+  #fsMetaEdit{padding:0;}
+  .form-row{display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px;}
+  .form-row.full{grid-template-columns:1fr;}
+  .form-field label{display:block; font-size:10.5px; text-transform:uppercase; letter-spacing:0.4px; color:var(--ink-faint); margin-bottom:5px; font-weight:600;}
+  .form-field input, .form-field select{width:100%; padding:8px 10px; border:1px solid var(--line-strong); border-radius:5px; font-size:12.8px; font-family:inherit; color:var(--ink); background:var(--surface);}
+  .form-actions{display:flex; justify-content:flex-end; gap:8px; margin-top:4px;}
+
+  .user-cell{display:flex; align-items:center; gap:10px;}
+  .user-avatar{width:28px;height:28px;border-radius:50%; background:var(--navy-deep); color:#EAD9B8; font-family:'IBM Plex Mono',monospace; font-weight:600; font-size:10.5px; display:flex;align-items:center;justify-content:center; flex-shrink:0;}
+  .user-name{font-weight:500; font-size:12.8px;}
+  .user-email{color:var(--ink-faint); font-size:11px; margin-top:1px;}
+
+  .org-tag{font-size:10.5px; font-weight:600; padding:2px 8px; border-radius:5px; background:#EEF0F2; color:var(--ink-soft); font-family:'IBM Plex Mono',monospace;}
+  .org-tag-row{display:flex; gap:5px; flex-wrap:wrap;}
+
+  .link-btn{font-size:11.5px; color:var(--navy); font-weight:600; cursor:pointer; background:none; border:none; padding:0; font-family:inherit;}
+
+  .org-checklist{border:1px solid var(--line-strong); border-radius:5px; overflow:hidden;}
+  .org-checklist label{display:flex; align-items:center; gap:9px; padding:8px 12px; font-size:12.8px; cursor:pointer; border-bottom:1px solid var(--line);}
+  .org-checklist label:last-child{border-bottom:none;}
+  .org-checklist label:hover{background:var(--paper);}
+  .org-checklist input{accent-color:var(--navy); width:15px; height:15px; margin:0; flex-shrink:0;}
+
   .txn-toggle{width:18px;height:18px;border:none;background:none;cursor:pointer;color:var(--ink-faint);display:flex;align-items:center;justify-content:center;padding:0;}
   .txn-toggle svg{transition:transform .15s;}
   .txn-toggle.open svg{transform:rotate(90deg);}
@@ -248,6 +265,15 @@
   .txn-detail-grid .v{font-size:12.5px; font-weight:500;}
   .txn-detail-notes{font-size:11.8px; color:var(--ink-soft); padding-top:8px; border-top:1px solid var(--line);}
   .txn-detail-notes b{color:var(--ink); font-weight:600;}
+
+  /* ---------- Modal ---------- */
+  .modal-backdrop{display:none; position:fixed; inset:0; background:rgba(20,33,61,0.45); z-index:50; align-items:center; justify-content:center;}
+  .modal-backdrop.open{display:flex;}
+  .modal-card{background:var(--surface); border-radius:8px; width:480px; max-width:92vw; max-height:88vh; overflow-y:auto; box-shadow:0 20px 60px rgba(20,33,61,0.3);}
+  .modal-head{display:flex; align-items:center; padding:16px 20px; border-bottom:1px solid var(--line);}
+  .modal-head h3{font-size:15px; font-weight:600; margin:0;}
+  .modal-close{margin-left:auto; width:26px; height:26px; border:none; background:none; color:var(--ink-faint); font-size:16px; cursor:pointer; border-radius:5px;}
+  .modal-close:hover{background:var(--paper);}
 </style>
 </head>
 <body>
@@ -263,9 +289,9 @@
     </div>
 
     <div class="nav-group-label">Navigate</div>
-    <button class="nav-item active" data-goto="orgs">
+    <button class="nav-item active" data-goto="orgs" data-nav="orgs">
       <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="2.5" y="2.5" width="6" height="6" rx="1"/><rect x="11.5" y="2.5" width="6" height="6" rx="1"/><rect x="2.5" y="11.5" width="6" height="6" rx="1"/><rect x="11.5" y="11.5" width="6" height="6" rx="1"/></svg>
-      Home / My Orgs
+      Organizations
     </button>
 
     <div id="orgNavGroup" style="display:none;">
@@ -273,7 +299,7 @@
         <div class="org-switcher-mark" id="sbOrgMark">SP</div>
         <div>
           <div class="org-switcher-name" id="sbOrgName">SciPy25</div>
-          <div class="org-switcher-role" id="sbOrgRole">Program Manager</div>
+          <div class="org-switcher-role" id="sbOrgRole">Administrator</div>
         </div>
         <span class="chev">⌄</span>
       </div>
@@ -289,14 +315,29 @@
       </button>
     </div>
 
+    <div class="nav-group-label">System</div>
+    <button class="nav-item" data-goto="imports" data-nav="imports">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="10" r="7"/><path d="M10 6.5v4l2.6 1.6"/></svg>
+      Imports &amp; Mapping
+      <span class="nav-badge">9</span>
+    </button>
+    <button class="nav-item" data-goto="users" data-nav="users">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="10" cy="7" r="3.2"/><path d="M4 17c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+      Users
+    </button>
+    <button class="nav-item" data-goto="audit" data-nav="audit">
+      <svg class="nav-icon" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M10 6v5l3 2"/><circle cx="10" cy="10" r="7.3"/></svg>
+      Audit Log
+    </button>
+
     <div class="sidebar-footer">
       <div class="avatar-sm">YY</div>
       <div>
         <div style="color:#E7EAF3; font-weight:500;">Y. Yang</div>
-        <div style="font-size:10.5px;">Program Manager</div>
+        <div style="font-size:10.5px;">Administrator</div>
       </div>
     </div>
-    <div class="role-note">Program Manager role · can create/edit Orgs, create/edit funding sources in assigned Orgs, apply adjustments.</div>
+    <div class="role-note">Administrator role · can create Orgs, grant/edit user access, review imports and mapping across all Orgs, view system-wide audit history.</div>
   </aside>
 
   <!-- ================= MAIN ================= -->
@@ -304,21 +345,21 @@
 
     <div class="topbar">
       <div class="crumbs" id="crumbs">
-        <span class="seg current" data-goto="orgs">My Orgs</span>
+        <span class="seg current" data-goto="orgs">Organizations</span>
       </div>
       <div class="topbar-spacer"></div>
-      <span class="role-pill">PROGRAM MANAGER</span>
-      <input class="top-search" placeholder="Search orgs, sources, docs…" readonly>
+      <span class="role-pill">ADMINISTRATOR</span>
+      <input class="top-search" placeholder="Search orgs, users, sources…" readonly>
     </div>
 
     <div class="content">
 
-      <!-- ============ VIEW 1: ORG LIST (HOME) ============ -->
+      <!-- ============ VIEW 1: ORGANIZATIONS (ADMIN) ============ -->
       <div class="view active" id="view-orgs">
         <div class="page-head">
           <div>
-            <div class="page-title">My Orgs</div>
-            <div class="page-sub">4 organizations you have access to</div>
+            <div class="page-title">Organizations</div>
+            <div class="page-sub">6 organizations on the platform</div>
           </div>
           <div class="head-actions">
             <button class="btn btn-primary">+ New Organization</button>
@@ -385,6 +426,34 @@
             <div class="org-metrics">
               <div class="org-metric"><div class="v">$62,410</div><div class="l">Available funding</div></div>
               <div class="org-metric"><div class="v">3</div><div class="l">Funding sources</div></div>
+            </div>
+          </div>
+
+          <div class="org-card">
+            <div class="org-card-top">
+              <div class="org-mark">PD</div>
+              <div>
+                <div class="org-name">PyData</div>
+              </div>
+              <span class="org-status-pill active">Active</span>
+            </div>
+            <div class="org-metrics">
+              <div class="org-metric"><div class="v">$211,600</div><div class="l">Available funding</div></div>
+              <div class="org-metric"><div class="v">3</div><div class="l">Funding sources</div></div>
+            </div>
+          </div>
+
+          <div class="org-card" style="opacity:0.72;">
+            <div class="org-card-top">
+              <div class="org-mark" style="background:var(--ink-faint);">AP</div>
+              <div>
+                <div class="org-name">Astropy</div>
+              </div>
+              <span class="org-status-pill archived">Archived</span>
+            </div>
+            <div class="org-metrics">
+              <div class="org-metric"><div class="v">$0</div><div class="l">Available funding</div></div>
+              <div class="org-metric"><div class="v">2</div><div class="l">Funding sources</div></div>
             </div>
           </div>
         </div>
@@ -542,6 +611,11 @@
               </div>
             </div>
           </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Access</h3><span class="count">4 users</span><a class="view-all" data-goto="users">Manage in Users →</a></div>
+          <div class="panel-foot" style="border-top:none;">M. Chen (Program Manager) and J. Rivera (Project Stakeholder) have explicit access — Y. Yang and A. Osei (System Administrators) have access automatically</div>
         </div>
       </div>
 
@@ -706,7 +780,7 @@
           </div>
 
           <div class="panel">
-            <div class="panel-head"><h3>Documents</h3><span class="count" id="docCount">3 linked</span><button class="btn" style="margin-left:auto; padding:6px 11px; font-size:11.5px;" onclick="toggleDocUpload()">+ Upload</button></div>
+            <div class="panel-head"><h3>Documents</h3><span class="count">3 linked</span><button class="btn" style="margin-left:auto; padding:6px 11px; font-size:11.5px;" onclick="toggleDocUpload()">+ Upload</button></div>
             <div class="fsd-docs">
               <div class="fsd-doc-featured">
                 <div class="fsd-doc-icon">LTR</div>
@@ -752,38 +826,494 @@
         </div>
       </div>
 
+      <!-- ============ VIEW 4: USERS (GLOBAL) ============ -->
+      <div class="view" id="view-users">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Users</div>
+            <div class="page-sub">9 users across the platform</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-primary" onclick="toggleInvite()">+ Invite User</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="filters">
+            <span class="filter-chip active">All</span>
+            <span class="filter-chip">System Administrator</span>
+            <span class="filter-chip">Program Manager</span>
+            <span class="filter-chip">Project Stakeholder</span>
+            <span class="filter-chip">Invited (pending)</span>
+          </div>
+          <table>
+            <thead><tr><th>User</th><th>User Type</th><th>Organizations</th><th>Status</th><th>Last Active</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td><div class="user-cell"><div class="user-avatar">YY</div><div><div class="user-name">Y. Yang</div><div class="user-email">yyang@scipy.org</div></div></div></td>
+                <td class="ref">System Administrator</td>
+                <td><div class="org-tag-row"><span class="org-tag">All Orgs</span></div></td>
+                <td><span class="status-dot mapped">Active</span></td>
+                <td class="ref">Today</td>
+                <td><button class="link-btn" onclick="toggleUserEdit()">Edit</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="user-avatar">AO</div><div><div class="user-name">A. Osei</div><div class="user-email">aosei@scipy.org</div></div></div></td>
+                <td class="ref">System Administrator</td>
+                <td><div class="org-tag-row"><span class="org-tag">All Orgs</span></div></td>
+                <td><span class="status-dot mapped">Active</span></td>
+                <td class="ref">Yesterday</td>
+                <td><button class="link-btn" onclick="toggleUserEdit()">Edit</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="user-avatar">MC</div><div><div class="user-name">M. Chen</div><div class="user-email">mchen@scipy.org</div></div></div></td>
+                <td class="ref">Program Manager</td>
+                <td><div class="org-tag-row"><span class="org-tag">SciPy25</span></div></td>
+                <td><span class="status-dot mapped">Active</span></td>
+                <td class="ref">Jul 17, 2026</td>
+                <td><button class="link-btn" onclick="toggleUserEdit()">Edit</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="user-avatar">DL</div><div><div class="user-name">D. Lindqvist</div><div class="user-email">dlindqvist@datavizconsortium.org</div></div></div></td>
+                <td class="ref">Program Manager</td>
+                <td><div class="org-tag-row"><span class="org-tag">MatPlotLib</span></div></td>
+                <td><span class="status-dot mapped">Active</span></td>
+                <td class="ref">Jul 16, 2026</td>
+                <td><button class="link-btn" onclick="toggleUserEdit()">Edit</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="user-avatar">JR</div><div><div class="user-name">J. Rivera</div><div class="user-email">jrivera@scicompfdn.org</div></div></div></td>
+                <td class="ref">Project Stakeholder</td>
+                <td><div class="org-tag-row"><span class="org-tag">SciPy25</span><span class="org-tag">SciPy26</span></div></td>
+                <td><span class="status-dot mapped">Active</span></td>
+                <td class="ref">Jul 10, 2026</td>
+                <td><button class="link-btn" onclick="toggleUserEdit()">Edit</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-cell"><div class="user-avatar">KP</div><div><div class="user-name">K. Patel</div><div class="user-email">kpatel@arraycomputing.org</div></div></div></td>
+                <td class="ref">Program Manager</td>
+                <td><div class="org-tag-row"><span class="org-tag">NumPy</span></div></td>
+                <td><span class="status-dot pending">Invited</span></td>
+                <td class="ref">—</td>
+                <td><button class="link-btn" onclick="toggleUserEdit()">Edit</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="panel-foot">Showing 6 of 9</div>
+        </div>
+
+      </div>
+
+      <!-- ============ VIEW 5: IMPORTS & MAPPING (GLOBAL) ============ -->
+      <div class="view" id="view-imports">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Imports &amp; Mapping</div>
+            <div class="page-sub">Batches and mapping exceptions across all Organizations</div>
+          </div>
+          <div class="head-actions">
+            <button class="btn btn-primary">Import Transactions</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Import Batches</h3><span class="count">6 batches</span></div>
+          <table>
+            <thead><tr><th>Batch</th><th>Imported</th><th>Orgs Affected</th><th>Transactions</th><th>Errors</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ref">IMP-0231</td>
+                <td class="ref">Jul 15, 2026</td>
+                <td><div class="org-tag-row"><span class="org-tag">SciPy25</span><span class="org-tag">PyData</span></div></td>
+                <td class="num">86</td>
+                <td class="num" style="color:var(--exception)">9</td>
+                <td><span class="status-dot partial">Needs review</span></td>
+              </tr>
+              <tr>
+                <td class="ref">IMP-0230</td>
+                <td class="ref">Jul 14, 2026</td>
+                <td><div class="org-tag-row"><span class="org-tag">MatPlotLib</span></div></td>
+                <td class="num">41</td>
+                <td class="num">0</td>
+                <td><span class="status-dot mapped">Complete</span></td>
+              </tr>
+              <tr>
+                <td class="ref">IMP-0227</td>
+                <td class="ref">Jun 30, 2026</td>
+                <td><div class="org-tag-row"><span class="org-tag">SciPy25</span><span class="org-tag">SciPy26</span><span class="org-tag">NumPy</span></div></td>
+                <td class="num">108</td>
+                <td class="num">0</td>
+                <td><span class="status-dot mapped">Complete</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Mapping Exception Queue</h3><span class="count">9 open</span></div>
+          <div class="filters">
+            <span class="filter-chip active">All Orgs</span>
+            <span class="filter-chip">SciPy25</span>
+            <span class="filter-chip">MatPlotLib</span>
+            <span class="filter-chip">PyData</span>
+            <span class="filter-chip">Has suggested rule</span>
+          </div>
+          <table>
+            <thead><tr><th>Org</th><th>Transaction</th><th>QBO Class</th><th>Suggested Source</th><th style="text-align:right">Amount</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ref">SciPy25</td>
+                <td><div class="tname">Equipment rental — excavator</div><div class="tsub">ref <span class="ref">QBO-88227</span></div></td>
+                <td class="ref">Capital / Equipment</td>
+                <td>City CDBG Grant <span style="color:var(--ink-faint); font-size:10.5px;">(suggested)</span></td>
+                <td class="num">$8,450.00</td>
+                <td><a class="view-all">Resolve →</a></td>
+              </tr>
+              <tr>
+                <td class="ref">SciPy25</td>
+                <td><div class="tname">Volunteer training materials</div><div class="tsub">ref <span class="ref">QBO-88244</span></div></td>
+                <td class="ref">Programs / Training</td>
+                <td style="color:var(--ink-faint)">No suggestion</td>
+                <td class="num">$780.25</td>
+                <td><a class="view-all">Resolve →</a></td>
+              </tr>
+              <tr>
+                <td class="ref">PyData</td>
+                <td><div class="tname">Venue deposit — conference hall</div><div class="tsub">ref <span class="ref">QBO-91042</span></div></td>
+                <td class="ref">Events / Venue</td>
+                <td>General <span style="color:var(--ink-faint); font-size:10.5px;">(suggested)</span></td>
+                <td class="num">$14,200.00</td>
+                <td><a class="view-all">Resolve →</a></td>
+              </tr>
+              <tr>
+                <td class="ref">PyData</td>
+                <td><div class="tname">Speaker travel reimbursement</div><div class="tsub">ref <span class="ref">QBO-91050</span></div></td>
+                <td class="ref">Travel</td>
+                <td style="color:var(--ink-faint)">No suggestion</td>
+                <td class="num">$1,120.40</td>
+                <td><a class="view-all">Resolve →</a></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="panel-foot">Showing 4 of 9 · filtered by Org above</div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Column Mapping</h3><button class="link-btn" style="margin-left:auto;" onclick="toggleColumnMapping()">Edit</button></div>
+          <div class="panel-foot" style="border-top:none; border-bottom:1px solid var(--line);">How columns in the uploaded file map to fields on the Financial Transaction record. Applies to every import, across all Organizations.</div>
+
+          <table id="colMapView">
+            <thead><tr><th>Upload Column</th><th></th><th>Database Field</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ref">Date</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>transaction_date</td>
+              </tr>
+              <tr>
+                <td class="ref">Amount</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>amount</td>
+              </tr>
+              <tr>
+                <td class="ref">Type</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>transaction_type</td>
+              </tr>
+              <tr>
+                <td class="ref">Class</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>qbo_class</td>
+              </tr>
+              <tr>
+                <td class="ref">Vendor</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>payee_vendor</td>
+              </tr>
+              <tr>
+                <td class="ref">Account</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>account</td>
+              </tr>
+              <tr>
+                <td class="ref">Memo</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>memo_description</td>
+              </tr>
+              <tr>
+                <td class="ref">Num</td>
+                <td style="color:var(--ink-faint);">→</td>
+                <td>qbo_reference_number</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="panel-foot" id="colMapViewFoot">8 columns mapped</div>
+
+          <div class="form-panel" id="colMapEdit" style="display:none;">
+            <table>
+              <thead><tr><th>Upload Column</th><th></th><th>Database Field</th><th></th></tr></thead>
+              <tbody>
+                <tr>
+                  <td><input value="Date"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option selected>transaction_date</option><option>amount</option><option>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Amount"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option selected>amount</option><option>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Type"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option selected>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Class"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option>transaction_type</option><option selected>qbo_class</option><option>payee_vendor</option><option>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Vendor"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option>transaction_type</option><option>qbo_class</option><option selected>payee_vendor</option><option>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Account"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option selected>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Memo"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option>account</option><option selected>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input value="Num"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option>account</option><option>memo_description</option><option selected>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+                </tr>
+                <tr>
+                  <td><input placeholder="New upload column name…"></td>
+                  <td style="color:var(--ink-faint);">→</td>
+                  <td><select><option>transaction_date</option><option>amount</option><option>transaction_type</option><option>qbo_class</option><option>payee_vendor</option><option>account</option><option>memo_description</option><option>qbo_reference_number</option></select></td>
+                  <td><button class="link-btn">+ Add</button></td>
+                </tr>
+              </tbody>
+            </table>
+            <div class="form-actions">
+              <button class="btn" onclick="toggleColumnMapping()">Cancel</button>
+              <button class="btn btn-primary" onclick="toggleColumnMapping()">Save Changes</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ============ VIEW 6: AUDIT LOG (GLOBAL) ============ -->
+      <div class="view" id="view-audit">
+        <div class="page-head">
+          <div>
+            <div class="page-title">Audit Log</div>
+            <div class="page-sub">System-wide activity across all Organizations</div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <div class="filters">
+            <span class="filter-chip active">All</span>
+            <span class="filter-chip">Today</span>
+            <span class="filter-chip">This week</span>
+            <span class="filter-chip">This month</span>
+            <span class="filter-chip">By Org</span>
+            <span class="filter-chip">By User</span>
+          </div>
+          <table>
+            <thead><tr><th>Time</th><th>Org</th><th>User</th><th>Entity</th><th>Change</th></tr></thead>
+            <tbody>
+              <tr>
+                <td class="ref">Jul 19, 09:14</td>
+                <td>SciPy25</td>
+                <td>Y. Yang</td>
+                <td class="ref">Transaction</td>
+                <td>Reassigned QBO-88231 from unmapped to City CDBG Grant</td>
+              </tr>
+              <tr>
+                <td class="ref">Jul 18, 16:40</td>
+                <td>MatPlotLib</td>
+                <td>D. Lindqvist</td>
+                <td class="ref">Funding Source</td>
+                <td>Created "Corporate Sponsorship Pool"</td>
+              </tr>
+              <tr>
+                <td class="ref">Jul 17, 11:02</td>
+                <td>—</td>
+                <td>A. Osei</td>
+                <td class="ref">Mapping Rule</td>
+                <td>Created rule: Events / Venue → PyData General</td>
+              </tr>
+              <tr>
+                <td class="ref">Jul 16, 08:55</td>
+                <td>SciPy25</td>
+                <td>Y. Yang</td>
+                <td class="ref">Access</td>
+                <td>Granted A. Osei "Manage" on SciPy25</td>
+              </tr>
+              <tr>
+                <td class="ref">Jul 15, 17:02</td>
+                <td>SciPy25, PyData</td>
+                <td>System</td>
+                <td class="ref">Import Batch</td>
+                <td>Imported batch IMP-0231 · 86 transactions, 9 exceptions</td>
+              </tr>
+              <tr>
+                <td class="ref">Mar 22, 2026</td>
+                <td>—</td>
+                <td>Y. Yang</td>
+                <td class="ref">User</td>
+                <td>Invited aosei@scipy.org as System Administrator</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="panel-foot">Showing 6 of 214 events</div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ================= EDIT USER MODAL ================= -->
+<div class="modal-backdrop" id="editUserModal" onclick="if(event.target===this) toggleUserEdit()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Edit User</h3>
+      <button class="modal-close" onclick="toggleUserEdit()">✕</button>
+    </div>
+    <div class="form-panel">
+      <div class="form-row full">
+        <div class="user-cell"><div class="user-avatar">MC</div><div><div class="user-name">M. Chen</div><div class="user-email">mchen@scipy.org</div></div></div>
+      </div>
+      <div class="form-row">
+        <div class="form-field"><label>User Type</label>
+          <select id="editUserType" onchange="handleEditUserTypeChange()">
+            <option>Program Manager</option><option>Project Stakeholder</option><option>System Administrator</option>
+          </select>
+        </div>
+        <div class="form-field"><label>Status</label>
+          <select><option>Active</option><option>Suspended</option></select>
+        </div>
+      </div>
+      <div class="form-row full" id="editOrgAccessSection">
+        <div class="form-field">
+          <label>Organization Access</label>
+          <table style="border:1px solid var(--line-strong); border-radius:5px;">
+            <thead><tr><th>Organization</th><th></th></tr></thead>
+            <tbody>
+              <tr>
+                <td>SciPy25</td>
+                <td><button class="link-btn" style="color:var(--overdue);">Remove</button></td>
+              </tr>
+              <tr>
+                <td><select><option>Add an organization…</option><option>SciPy26</option><option>MatPlotLib</option><option>NumPy</option><option>PyData</option></select></td>
+                <td><button class="link-btn">+ Add</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div class="form-row full" id="editAllOrgsNote" style="display:none;">
+        <div class="form-field">
+          <label>Organization Access</label>
+          <div style="font-size:12.5px; color:var(--ink-soft); padding:10px 12px; background:var(--paper); border-radius:5px; border:1px solid var(--line);">
+            System Administrators automatically have access to all Organizations on the platform.
+          </div>
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="toggleUserEdit()">Cancel</button>
+        <button class="btn btn-primary" onclick="toggleUserEdit()">Save Changes</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ================= INVITE USER MODAL ================= -->
+<div class="modal-backdrop" id="inviteModal" onclick="if(event.target===this) toggleInvite()">
+  <div class="modal-card">
+    <div class="modal-head">
+      <h3>Invite User</h3>
+      <button class="modal-close" onclick="toggleInvite()">✕</button>
+    </div>
+    <div class="form-panel">
+      <div class="form-row full">
+        <div class="form-field"><label>Email</label><input placeholder="name@organization.org"></div>
+      </div>
+      <div class="form-row full">
+        <div class="form-field"><label>User Type</label>
+          <select id="inviteUserType" onchange="handleInviteUserTypeChange()">
+            <option>Project Stakeholder</option><option>Program Manager</option><option>System Administrator</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row full" id="inviteOrgField">
+        <div class="form-field">
+          <label>Initial Organizations</label>
+          <div class="org-checklist">
+            <label><input type="checkbox"> SciPy25</label>
+            <label><input type="checkbox"> SciPy26</label>
+            <label><input type="checkbox"> MatPlotLib</label>
+            <label><input type="checkbox"> NumPy</label>
+            <label><input type="checkbox"> PyData</label>
+          </div>
+        </div>
+      </div>
+      <div class="form-row full" id="inviteAllOrgsNote" style="display:none;">
+        <div style="font-size:12.5px; color:var(--ink-soft); padding:10px 12px; background:var(--paper); border-radius:5px; border:1px solid var(--line);">
+          System Administrators automatically have access to all Organizations on the platform.
+        </div>
+      </div>
+      <div class="form-actions">
+        <button class="btn" onclick="toggleInvite()">Cancel</button>
+        <button class="btn btn-primary" onclick="toggleInvite()">Send Invite</button>
+      </div>
     </div>
   </div>
 </div>
 
 <script>
-  const views = {orgs:'view-orgs', org:'view-org', fs:'view-fs'};
-  const navKeyFor = {orgs:'orgs', org:'overview', fs:'fslist'};
+  const views = {orgs:'view-orgs', org:'view-org', fs:'view-fs', users:'view-users', imports:'view-imports', audit:'view-audit'};
+  const navKeyFor = {orgs:'orgs', org:'overview', fs:'fslist', users:'users', imports:'imports', audit:'audit'};
+  const orgScopedKeys = ['org', 'fs'];
   const crumbTrails = {
-    orgs:    [{label:'My Orgs', goto:'orgs'}],
-    org:     [{label:'My Orgs', goto:'orgs'}, {label:'SciPy25', goto:'org'}],
-    fs:      [{label:'My Orgs', goto:'orgs'}, {label:'SciPy25', goto:'org'}, {label:'City CDBG Grant', goto:'fs'}]
+    orgs:    [{label:'Organizations', goto:'orgs'}],
+    org:     [{label:'Organizations', goto:'orgs'}, {label:'SciPy25', goto:'org'}],
+    fs:      [{label:'Organizations', goto:'orgs'}, {label:'SciPy25', goto:'org'}, {label:'City CDBG Grant', goto:'fs'}],
+    users:   [{label:'Users', goto:'users'}],
+    imports: [{label:'Imports & Mapping', goto:'imports'}],
+    audit:   [{label:'Audit Log', goto:'audit'}]
   };
 
-  function toggleTxn(row){
-    const btn = row.querySelector('.txn-toggle');
-    const detail = row.nextElementSibling;
-    const isOpen = detail.style.display === 'table-row';
-    detail.style.display = isOpen ? 'none' : 'table-row';
-    btn.classList.toggle('open', !isOpen);
+  function toggleColumnMapping(){
+    const view = document.getElementById('colMapView');
+    const viewFoot = document.getElementById('colMapViewFoot');
+    const edit = document.getElementById('colMapEdit');
+    const editing = edit.style.display !== 'none';
+    edit.style.display = editing ? 'none' : 'block';
+    view.style.display = editing ? 'table' : 'none';
+    viewFoot.style.display = editing ? 'block' : 'none';
   }
 
   function toggleDocUpload(){
     const form = document.getElementById('docUploadForm');
     form.style.display = (form.style.display === 'none') ? 'block' : 'none';
-  }
-
-  function toggleOrgEdit(){
-    const view = document.getElementById('orgMetaView');
-    const edit = document.getElementById('orgMetaEdit');
-    const editing = edit.style.display !== 'none';
-    edit.style.display = editing ? 'none' : 'block';
-    view.style.display = editing ? 'grid' : 'none';
   }
 
   function toggleFsEdit(){
@@ -794,18 +1324,53 @@
     view.style.display = editing ? 'grid' : 'none';
   }
 
+  function toggleOrgEdit(){
+    const view = document.getElementById('orgMetaView');
+    const edit = document.getElementById('orgMetaEdit');
+    const editing = edit.style.display !== 'none';
+    edit.style.display = editing ? 'none' : 'block';
+    view.style.display = editing ? 'grid' : 'none';
+  }
+
+  function toggleUserEdit(){
+    document.getElementById('editUserModal').classList.toggle('open');
+  }
+
+  function toggleInvite(){
+    document.getElementById('inviteModal').classList.toggle('open');
+  }
+
+  function handleEditUserTypeChange(){
+    const isAdmin = document.getElementById('editUserType').value === 'System Administrator';
+    document.getElementById('editOrgAccessSection').style.display = isAdmin ? 'none' : 'grid';
+    document.getElementById('editAllOrgsNote').style.display = isAdmin ? 'grid' : 'none';
+  }
+
+  function handleInviteUserTypeChange(){
+    const isAdmin = document.getElementById('inviteUserType').value === 'System Administrator';
+    document.getElementById('inviteOrgField').style.display = isAdmin ? 'none' : 'grid';
+    document.getElementById('inviteAllOrgsNote').style.display = isAdmin ? 'grid' : 'none';
+  }
+
+  function toggleTxn(row){
+    const btn = row.querySelector('.txn-toggle');
+    const detail = row.nextElementSibling;
+    const isOpen = detail.style.display === 'table-row';
+    detail.style.display = isOpen ? 'none' : 'table-row';
+    btn.classList.toggle('open', !isOpen);
+  }
+
   function go(key){
     Object.values(views).forEach(id => document.getElementById(id).classList.remove('active'));
     document.getElementById(views[key]).classList.add('active');
 
-    const inOrgContext = key !== 'orgs';
+    const inOrgContext = orgScopedKeys.includes(key);
     document.getElementById('orgNavGroup').style.display = inOrgContext ? 'block' : 'none';
 
     // nav active state
     document.querySelectorAll('.nav-item[data-goto]').forEach(el => el.classList.remove('active'));
     const activeNavKey = navKeyFor[key];
     let navMatch = document.querySelector('.nav-item[data-nav="'+ activeNavKey +'"]');
-    if(!navMatch && !inOrgContext) navMatch = document.querySelector('.nav-item[data-goto="orgs"]');
     if(navMatch) navMatch.classList.add('active');
 
     // breadcrumbs
@@ -823,3 +1388,4 @@
 </script>
 </body>
 </html>
+
