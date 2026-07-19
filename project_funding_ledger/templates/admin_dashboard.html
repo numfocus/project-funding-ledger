@@ -38,6 +38,7 @@
     /* Avoid clashes with main stylesheet */
     body {
         background-color: #f8fafc;
+        color: #0f172a !important; /* slate-900 */
         font-family: 'Inter', sans-serif;
     }
     main {
@@ -45,12 +46,21 @@
         padding: 0 !important;
         margin: 0 !important;
     }
+    /* Enforce dark text inside inputs, select boxes, and textareas */
+    input, select, textarea {
+        color: #0f172a !important; /* slate-900 */
+    }
+    /* Ensure disabled input elements are readable and have a solid gray background */
+    input:disabled, select:disabled {
+        color: #475569 !important; /* slate-600 */
+        background-color: #f1f5f9 !important; /* slate-100 background */
+    }
     /* Increase contrast for text-slate-400 and text-slate-500 classes */
     .text-slate-400 {
-        color: #475569 !important;
+        color: #334155 !important; /* slate-700 */
     }
     .text-slate-500 {
-        color: #334155 !important;
+        color: #0f172a !important; /* slate-900 */
     }
 </style>
 {% endblock %}
@@ -93,6 +103,13 @@
         const [editingUser, setEditingUser] = useState(null);
         const [userForm, setUserForm] = useState({ email: '', full_name: '', user_type: 'Organization Stakeholder', status: 'Invited' });
         const [userModalError, setUserModalError] = useState(null);
+        
+        // Organization Access state
+        const [userPermissions, setUserPermissions] = useState([]);
+        const [loadingPermissions, setLoadingPermissions] = useState(false);
+        const [selectedOrgId, setSelectedOrgId] = useState('');
+        const [selectedPermLevel, setSelectedPermLevel] = useState('View');
+        const [permissionError, setPermissionError] = useState(null);
  
         // Fetch dashboard data
         useEffect(() => {
@@ -143,7 +160,27 @@
             }
         };
 
+        const fetchUserPermissions = async (userId) => {
+            setLoadingPermissions(true);
+            setPermissionError(null);
+            try {
+                const res = await fetch(`/api/admin/users/${userId}/permissions`);
+                if (res.ok) {
+                    const data = await res.json();
+                    setUserPermissions(data);
+                } else {
+                    console.error("Failed to fetch permissions");
+                }
+            } catch (err) {
+                console.error("Error fetching permissions:", err);
+            } finally {
+                setLoadingPermissions(false);
+            }
+        };
+
         const openUserModal = (user) => {
+            setSelectedOrgId('');
+            setPermissionError(null);
             if (user) {
                 setEditingUser(user);
                 setUserForm({
@@ -152,6 +189,8 @@
                     user_type: user.user_type,
                     status: user.status
                 });
+                setSelectedPermLevel(user.user_type === 'Program Manager' ? 'Edit Metadata' : 'View');
+                fetchUserPermissions(user.id);
             } else {
                 setEditingUser(null);
                 setUserForm({
@@ -160,9 +199,54 @@
                     user_type: 'Organization Stakeholder',
                     status: 'Invited'
                 });
+                setSelectedPermLevel('View');
+                setUserPermissions([]);
             }
             setUserModalError(null);
             setShowUserModal(true);
+        };
+
+        const handleAddPermission = async (e) => {
+            e.preventDefault();
+            if (!selectedOrgId) return;
+            setPermissionError(null);
+            try {
+                const res = await fetch(`/api/admin/users/${editingUser.id}/permissions`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        organization_id: selectedOrgId,
+                        permission_level: selectedPermLevel
+                    })
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setSelectedOrgId('');
+                    fetchUserPermissions(editingUser.id);
+                } else {
+                    setPermissionError(data.error || "Failed to add permission");
+                }
+            } catch (err) {
+                setPermissionError("Network error.");
+            }
+        };
+
+        const handleRevokePermission = async (permId) => {
+            if (!confirm("Are you sure you want to revoke this user's access to this organization?")) return;
+            setPermissionError(null);
+            try {
+                const res = await fetch(`/api/admin/users/permissions/${permId}`, {
+                    method: 'DELETE'
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    fetchUserPermissions(editingUser.id);
+                } else {
+                    alert(data.error || "Failed to revoke permission");
+                }
+            } catch (err) {
+                alert("Network error.");
+            }
         };
 
         const handleUserSubmit = async (e) => {
@@ -199,6 +283,7 @@
                     method: 'DELETE'
                 });
                 if (res.ok) {
+                    setShowUserModal(false);
                     fetchUsers();
                 } else {
                     const data = await res.json();
@@ -878,18 +963,12 @@
                                                                 <span className="text-amber-600 font-semibold"><i className="fa-solid fa-link-slash"></i> Unregistered</span>
                                                             )}
                                                         </td>
-                                                        <td className="py-4 px-6 text-right space-x-2">
+                                                        <td className="py-4 px-6 text-right">
                                                             <button 
                                                                 onClick={() => openUserModal(u)}
                                                                 className="bg-white hover:bg-slate-50 text-slate-700 font-semibold px-3 py-1.5 rounded-lg text-xs transition inline-flex items-center gap-1 border border-slate-200 shadow-sm"
                                                             >
                                                                 Edit <i className="fa-solid fa-edit"></i>
-                                                            </button>
-                                                            <button 
-                                                                onClick={() => handleDeleteUser(u.id)}
-                                                                className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-3 py-1.5 rounded-lg text-xs transition inline-flex items-center gap-1 border border-rose-200 shadow-sm"
-                                                            >
-                                                                Delete <i className="fa-solid fa-trash"></i>
                                                             </button>
                                                         </td>
                                                     </tr>
@@ -1033,10 +1112,18 @@
                                         <label className="text-slate-500 text-xs font-semibold uppercase tracking-wider block">User Role</label>
                                         <select 
                                             value={userForm.user_type}
-                                            onChange={(e) => setUserForm(prev => ({ ...prev, user_type: e.target.value }))}
+                                            onChange={(e) => {
+                                                const nextRole = e.target.value;
+                                                setUserForm(prev => ({ ...prev, user_type: nextRole }));
+                                                if (nextRole === 'Program Manager') {
+                                                    setSelectedPermLevel('Edit Metadata');
+                                                } else if (nextRole === 'Organization Stakeholder') {
+                                                    setSelectedPermLevel('View');
+                                                }
+                                            }}
                                             className="w-full px-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm text-sm"
                                         >
-                                            <option value="Project Stakeholder">Project Stakeholder</option>
+                                            <option value="Organization Stakeholder">Organization Stakeholder</option>
                                             <option value="Program Manager">Program Manager</option>
                                             <option value="System Administrator">System Administrator</option>
                                         </select>
@@ -1058,20 +1145,130 @@
                                     </div>
                                 </div>
 
-                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
-                                    <button 
-                                        type="button"
-                                        onClick={() => { setShowUserModal(false); setUserModalError(null); }}
-                                        className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl text-sm transition"
-                                    >
-                                        Cancel
-                                    </button>
-                                    <button 
-                                        type="submit"
-                                        className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md text-sm transition"
-                                    >
-                                        {editingUser ? "Save Changes" : "Create Profile"}
-                                    </button>
+                                {/* Organization Access Section */}
+                                {editingUser && (
+                                    <div className="border-t border-slate-100 pt-4 space-y-4">
+                                        <h4 className="font-bold text-slate-800 text-sm flex items-center gap-1.5">
+                                            <i className="fa-solid fa-key text-brand-600"></i>
+                                            Organization Access Control
+                                        </h4>
+                                        
+                                        {userForm.user_type === 'System Administrator' ? (
+                                            <div className="bg-brand-50 border border-brand-100 rounded-xl p-3 text-xs text-brand-800 flex items-center gap-2">
+                                                <i className="fa-solid fa-circle-info text-base"></i>
+                                                <span>System Administrators automatically have access to all organizations.</span>
+                                            </div>
+                                        ) : (
+                                            <div className="space-y-3">
+                                                {/* Permission List */}
+                                                <div className="bg-slate-50 border border-slate-100 rounded-xl p-3 max-h-40 overflow-y-auto space-y-2">
+                                                    {loadingPermissions ? (
+                                                        <div className="text-center py-4 text-xs text-slate-400 font-semibold">
+                                                            <i className="fa-solid fa-spinner animate-spin"></i> Loading permissions...
+                                                        </div>
+                                                    ) : userPermissions.length > 0 ? (
+                                                        userPermissions.map(p => (
+                                                            <div key={p.id} className="bg-white border border-slate-100 rounded-lg p-2.5 flex items-center justify-between shadow-sm">
+                                                                <div>
+                                                                    <span className="font-semibold text-slate-800 text-xs">{p.organization ? p.organization.organization_name : 'Unknown Org'}</span>
+                                                                    <span className="ml-2 px-1.5 py-0.5 rounded text-[10px] font-bold bg-indigo-50 text-indigo-600 border border-indigo-100">
+                                                                        {p.permission_level}
+                                                                    </span>
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => handleRevokePermission(p.id)}
+                                                                    className="text-rose-500 hover:text-rose-700 hover:bg-rose-50 p-1.5 rounded transition text-xs flex items-center justify-center"
+                                                                    title="Revoke Access"
+                                                                >
+                                                                    <i className="fa-solid fa-trash-can"></i>
+                                                                </button>
+                                                            </div>
+                                                        ))
+                                                    ) : (
+                                                        <div className="text-center py-4 text-xs text-slate-400 font-semibold">
+                                                            No explicit organization access granted.
+                                                        </div>
+                                                    )}
+                                                </div>
+
+                                                {/* Add Permission Form */}
+                                                {permissionError && (
+                                                    <div className="bg-red-50 text-red-800 p-2.5 rounded-lg border border-red-100 text-xs">
+                                                        {permissionError}
+                                                    </div>
+                                                )}
+
+                                                <div className="flex gap-2 items-end">
+                                                    <div className="flex-1 space-y-1">
+                                                        <label className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider block">Grant Organization</label>
+                                                        <select
+                                                            value={selectedOrgId}
+                                                            onChange={(e) => setSelectedOrgId(e.target.value)}
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+                                                        >
+                                                            <option value="">-- Select Organization --</option>
+                                                            {organizations
+                                                                .filter(org => !userPermissions.some(p => p.organization_id === org.id))
+                                                                .map(org => (
+                                                                    <option key={org.id} value={org.id}>{org.organization_name}</option>
+                                                                ))
+                                                            }
+                                                        </select>
+                                                    </div>
+
+                                                    <div className="w-28 space-y-1">
+                                                        <label className="text-slate-500 text-[10px] font-semibold uppercase tracking-wider block">Level</label>
+                                                        <select
+                                                            value={selectedPermLevel}
+                                                            onChange={(e) => setSelectedPermLevel(e.target.value)}
+                                                            className="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-xs focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm"
+                                                        >
+                                                            <option value="View">View</option>
+                                                            <option value="Edit Metadata">Edit Metadata</option>
+                                                            <option value="Manage">Manage</option>
+                                                        </select>
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={handleAddPermission}
+                                                        disabled={!selectedOrgId}
+                                                        className="bg-brand-700 hover:bg-brand-800 disabled:bg-brand-300 text-white font-semibold px-4 py-2 rounded-lg text-xs transition shadow-sm h-[34px] flex items-center justify-center"
+                                                    >
+                                                        Grant
+                                                    </button>
+                                                </div>
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+
+                                <div className="flex items-center justify-between pt-4 border-t border-slate-100">
+                                    {editingUser ? (
+                                        <button 
+                                            type="button"
+                                            onClick={() => handleDeleteUser(editingUser.id)}
+                                            className="bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold px-4 py-2.5 rounded-xl text-sm transition border border-rose-200 flex items-center gap-1.5 shadow-sm"
+                                        >
+                                            <i className="fa-solid fa-trash-can"></i> Delete Profile
+                                        </button>
+                                    ) : <div />}
+                                    <div className="flex items-center gap-3">
+                                        <button 
+                                            type="button"
+                                            onClick={() => { setShowUserModal(false); setUserModalError(null); }}
+                                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-5 py-2.5 rounded-xl text-sm transition"
+                                        >
+                                            Cancel
+                                        </button>
+                                        <button 
+                                            type="submit"
+                                            className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-6 py-2.5 rounded-xl shadow-md text-sm transition"
+                                        >
+                                            {editingUser ? "Save Changes" : "Create Profile"}
+                                        </button>
+                                    </div>
                                 </div>
                             </form>
                         </div>

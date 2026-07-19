@@ -535,3 +535,167 @@ def api_delete_user(user_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
+
+@org_import_bp.route('/api/admin/users/<user_id>/permissions', methods=['GET'])
+def api_user_permissions(user_id):
+    """
+    JSON API returning active organization permissions for a user.
+    """
+    client = get_supabase_client()
+    try:
+        check_admin(client)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    try:
+        # Fetch active permissions for this user, joining with organization
+        res = client.table('organization_permission') \
+            .select('*, organization:organization_id(organization_name)') \
+            .eq('user_id', user_id) \
+            .eq('status', 'Active') \
+            .execute()
+        return jsonify(res.data or []), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@org_import_bp.route('/api/admin/users/<user_id>/permissions', methods=['POST'])
+def api_grant_user_permission(user_id):
+    """
+    JSON API to grant organization access to a user.
+    """
+    client = get_supabase_client()
+    try:
+        user_info = check_admin(client)
+        admin_profile_id = user_info["profile_id"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    data = request.json or {}
+    organization_id = data.get('organization_id')
+    permission_level = data.get('permission_level', 'View')
+    notes = data.get('notes', '')
+    
+    if not organization_id:
+        return jsonify({"error": "Organization ID is required"}), 400
+        
+    if permission_level not in ['View', 'Edit Metadata', 'Manage']:
+        return jsonify({"error": "Invalid permission level"}), 400
+        
+    try:
+        # Check if user profile exists
+        target_user = client.table('user_profile').select('id, email, full_name').eq('id', user_id).is_('deleted_at', 'null').execute()
+        if not target_user.data:
+            return jsonify({"error": "Target user not found"}), 404
+        user_email = target_user.data[0].get('email')
+        
+        # Check if organization exists
+        org = client.table('organization').select('id, organization_name').eq('id', organization_id).execute()
+        if not org.data:
+            return jsonify({"error": "Organization not found"}), 404
+        org_name = org.data[0].get('organization_name')
+        
+        # Check if active permission already exists
+        existing = client.table('organization_permission') \
+            .select('id') \
+            .eq('user_id', user_id) \
+            .eq('organization_id', organization_id) \
+            .eq('status', 'Active') \
+            .execute()
+        if existing.data:
+            return jsonify({"error": "User already has active permission for this organization"}), 400
+            
+        # Insert permission record
+        res = client.table('organization_permission').insert({
+            'user_id': user_id,
+            'organization_id': organization_id,
+            'permission_level': permission_level,
+            'status': 'Active',
+            'created_by_user_id': admin_profile_id,
+            'notes': notes
+        }).execute()
+        
+        if not res.data:
+            raise ValueError("Failed to insert permission record")
+            
+        new_permission = res.data[0]
+        
+        # Log audit event
+        from project_funding_ledger.audit import log_audit_event_async
+        log_audit_event_async(
+            user_id=user_info["user"].id,
+            action_type='Permission Change',
+            entity_type='User',
+            table_name='organization_permission',
+            record_id=new_permission['id'],
+            related_organization_id=organization_id,
+            new_value=new_permission,
+            summary=f"Admin granted '{permission_level}' permission to user {user_email} for organization '{org_name}'."
+        )
+        
+        return jsonify(new_permission), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+@org_import_bp.route('/api/admin/users/permissions/<permission_id>', methods=['DELETE'])
+def api_revoke_user_permission(permission_id):
+    """
+    JSON API to soft-revoke an organization permission.
+    """
+    client = get_supabase_client()
+    try:
+        user_info = check_admin(client)
+        admin_profile_id = user_info["profile_id"]
+    except Exception as e:
+        return jsonify({"error": str(e)}), 403
+        
+    try:
+        # Fetch the permission record
+        perm_res = client.table('organization_permission').select('*').eq('id', permission_id).execute()
+        if not perm_res.data:
+            return jsonify({"error": "Permission record not found"}), 404
+        perm = perm_res.data[0]
+        
+        if perm.get('status') != 'Active':
+            return jsonify({"error": "Permission is not active"}), 400
+            
+        # Get target user email
+        target_user = client.table('user_profile').select('email').eq('id', perm['user_id']).execute()
+        user_email = target_user.data[0].get('email') if target_user.data else 'Unknown'
+        
+        # Get organization name
+        org = client.table('organization').select('organization_name').eq('id', perm['organization_id']).execute()
+        org_name = org.data[0].get('organization_name') if org.data else 'Unknown'
+        
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        res = client.table('organization_permission').update({
+            'status': 'Revoked',
+            'revoked_at': now,
+            'revoked_by_user_id': admin_profile_id
+        }).eq('id', permission_id).execute()
+        
+        if not res.data:
+            raise ValueError("Failed to revoke permission record")
+            
+        updated_perm = res.data[0]
+        
+        # Log audit event
+        from project_funding_ledger.audit import log_audit_event_async
+        log_audit_event_async(
+            user_id=user_info["user"].id,
+            action_type='Permission Change',
+            entity_type='User',
+            table_name='organization_permission',
+            record_id=permission_id,
+            related_organization_id=perm['organization_id'],
+            old_value=perm,
+            new_value=updated_perm,
+            summary=f"Admin revoked permission for user {user_email} from organization '{org_name}'."
+        )
+        
+        return jsonify(updated_perm), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+

@@ -2066,18 +2066,18 @@ Authentication is managed by Supabase Auth.
 The user_profile table stores application-specific user information that
 supplements Supabase Auth.
 
-Application authorization is managed through Project Permissions. User
+Application authorization is managed through Organization Permissions. User
 Type identifies the user's general application role but does not, by
-itself, grant access to Projects, Funding Sources, or related records.
+itself, grant access to Organizations, Funding Sources, or related records.
 
-## 4.10.12 project_permission
+## 4.10.12 organization_permission
 
-The project_permission table assigns users to Projects and defines their
+The organization_permission table assigns users to Organizations and defines their
 access level.
 
-The project_permission table is central to the application security
-model. Project-level permissions determine whether a user may view,
-manage, or administer a Project and its related records.
+The organization_permission table is central to the application security
+model. Organization-level permissions determine whether a user may view,
+manage, or administer an Organization and its related records.
 
 Key Fields
 
@@ -2085,9 +2085,9 @@ Key Fields
 |--------------------|-----------|--------------|---------------------------------|
 | id                 | uuid      | Yes          | Primary key                     |
 | user_id            | uuid      | Yes          | Foreign key to user_profile     |
-| project_id         | uuid      | Yes          | Foreign key to project          |
+| organization_id    | uuid      | Yes          | Foreign key to organization     |
 | permission_level   | text      | Yes          | View, Edit Metadata, Manage     |
-| status             | text      | Yes          | Active, inactive, revoked       |
+| status             | text      | Yes          | Active, Inactive, Revoked       |
 | created_at         | timestamp | Yes          | Record creation timestamp       |
 | updated_at         | timestamp | Yes          | Last update timestamp           |
 | created_by_user_id | uuid      | No           | User who granted permission     |
@@ -2097,24 +2097,24 @@ Key Fields
 
 ### 4.10.12.1 Relationships
 
-A User may have many Project Permissions.
+A User may have many Organization Permissions.
 
-A Project may have many Project Permissions.
+An Organization may have many Organization Permissions.
 
-A Project Permission applies to one User and one Project..
+An Organization Permission applies to one User and one Organization.
 
 ### 4.10.12.2 Design Notes
 
-Project Permissions determine access to the Project and related Funding
+Organization Permissions determine access to the Organization and related Funding
 Sources, Financial Transactions, Governing Agreements, Reporting
 Obligations, Project Governance information, and Supporting Documents.
 
-Access to Funding Sources is inherited through the Project. Users do not
-normally require separate permissions for each Funding Source within a
-Project.
+Access to Funding Sources is inherited through the Organization. Users do not
+normally require separate permissions for each Funding Source within an
+Organization.
 
-A unique constraint should prevent more than one active Project
-Permission record for the same User Profile and Project.
+A unique constraint should prevent more than one active Organization
+Permission record for the same User Profile and Organization.
 
 ## 4.10.13 funding_adjustment
 
