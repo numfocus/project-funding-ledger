@@ -6,6 +6,7 @@ from project_funding_ledger.profile import profile_bp
 from project_funding_ledger.supabase_client import save_supabase_session
 from project_funding_ledger.queue.webhooks import tasks_bp
 from project_funding_ledger.routes.org_import import org_import_bp
+from project_funding_ledger.routes.organization import org_bp
 
 # Load environment variables from .env file
 load_dotenv()
@@ -30,6 +31,7 @@ def create_app(test_config=None):
     app.register_blueprint(profile_bp)
     app.register_blueprint(tasks_bp)
     app.register_blueprint(org_import_bp)
+    app.register_blueprint(org_bp)
 
 
     # After-request hook to persist refreshed Supabase tokens in session cookie
@@ -37,19 +39,28 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        # Redirect index to admin dashboard if System Administrator, else profile page
+        # Redirect index to admin dashboard if System Administrator, else org dashboard/detail
         from project_funding_ledger.supabase_client import get_supabase_client
         client = get_supabase_client()
         try:
             user_res = client.auth.get_user()
             user = user_res.user if user_res else None
             if user:
-                profile_res = client.table('user_profile').select('user_type').eq('auth_user_id', user.id).execute()
-                if profile_res.data and profile_res.data[0].get('user_type') == 'System Administrator':
-                    return redirect(url_for('org_import.admin_dashboard'))
+                profile_res = client.table('user_profile').select('id, user_type').eq('auth_user_id', user.id).single().execute()
+                if profile_res.data:
+                    user_type = profile_res.data.get('user_type')
+                    if user_type == 'System Administrator':
+                        return redirect(url_for('org_import.admin_dashboard'))
+                    else:
+                        user_profile_id = profile_res.data.get('id')
+                        perms_res = client.table('organization_permission').select('organization_id').eq('user_id', user_profile_id).eq('status', 'Active').execute()
+                        perms = perms_res.data or []
+                        if len(perms) == 1:
+                            return redirect(url_for('org.org_detail', org_id=perms[0]['organization_id']))
+                        return redirect(url_for('org.dashboard'))
         except Exception:
             pass
-        return redirect(url_for('profile.profile_page'))
+        return redirect(url_for('auth.login'))
 
     @app.route('/hello')
     def hello():

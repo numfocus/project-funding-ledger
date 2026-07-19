@@ -1,0 +1,422 @@
+{% extends "base.html" %}
+
+{% block title %}{{ organization.organization_name }} | Project Funding Ledger{% endblock %}
+
+{% block head %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- React 18 & ReactDOM 18 -->
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<!-- Babel for JSX compiler -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        50: '#f0f9ff',
+                        100: '#e0f2fe',
+                        500: '#0ea5e9',
+                        600: '#0284c7',
+                        700: '#0369a1',
+                        800: '#075985',
+                        950: '#082f49',
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    body {
+        background-color: #f8fafc;
+        color: #0f172a !important;
+        font-family: 'Inter', sans-serif;
+    }
+    main {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    input, select, textarea {
+        color: #0f172a !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="org-detail-root"></div>
+
+<script type="text/babel">
+{% raw %}
+    const { useState } = React;
+
+    const ORG_ID = "{% endraw %}{{ organization.id }}{% raw %}";
+    const USER_TYPE = "{% endraw %}{{ user_profile.user_type }}{% raw %}";
+    const PERM_LEVEL = "{% endraw %}{{ permission_level }}{% raw %}";
+
+    const INITIAL_ORG = {
+        id: "{% endraw %}{{ organization.id }}{% raw %}",
+        organization_name: "{% endraw %}{{ organization.organization_name|e }}{% raw %}",
+        organization_slug: "{% endraw %}{{ organization.organization_slug|e }}{% raw %}",
+        organization_type: "{% endraw %}{{ organization.organization_type|e }}{% raw %}",
+        status: "{% endraw %}{{ organization.status|e }}{% raw %}",
+        description: "{% endraw %}{{ organization.description|default('', true)|e }}{% raw %}",
+        website_url: "{% endraw %}{{ organization.website_url|default('', true)|e }}{% raw %}",
+        source_code_url: "{% endraw %}{{ organization.source_code_url|default('', true)|e }}{% raw %}",
+        donation_url: "{% endraw %}{{ organization.donation_url|default('', true)|e }}{% raw %}",
+        join_date: "{% endraw %}{{ organization.join_date|default('N/A', true)|e }}{% raw %}"
+    };
+
+    function OrgDetailApp() {
+        const [org, setOrg] = useState(INITIAL_ORG);
+        const [isEditing, setIsEditing] = useState(false);
+        const [editForm, setEditForm] = useState(INITIAL_ORG);
+        const [saving, setSaving] = useState(false);
+        const [error, setError] = useState(null);
+        const [successMsg, setSuccessMsg] = useState(null);
+
+        const canEdit = USER_TYPE === 'System Administrator' || USER_TYPE === 'Program Manager' || PERM_LEVEL === 'Edit Metadata' || PERM_LEVEL === 'Manage';
+
+        const handleSave = async (e) => {
+            e.preventDefault();
+            setSaving(true);
+            setError(null);
+            setSuccessMsg(null);
+
+            try {
+                const res = await fetch(`/api/organizations/${ORG_ID}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(editForm)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setOrg(data);
+                    setIsEditing(false);
+                    setSuccessMsg("Organization metadata updated successfully.");
+                } else {
+                    setError(data.error || "Failed to update organization.");
+                }
+            } catch (err) {
+                setError("Network error updating organization.");
+            } finally {
+                setSaving(false);
+            }
+        };
+
+        const handleExportCSV = () => {
+            const csvContent = "data:text/csv;charset=utf-8,Date,Payee,Funding Source,Amount,Status\n" +
+                `2026-07-01,General Overhead,General Unrestricted Funding,1250.00,Mapped\n` +
+                `2026-07-15,Cloud Hosting Provider,General Unrestricted Funding,450.00,Mapped\n`;
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `${org.organization_slug}-transactions.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
+        return (
+            <div className="min-h-screen flex flex-col bg-slate-50">
+                {/* Sticky Header Nav */}
+                <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <a href="/dashboard" className="bg-slate-100 hover:bg-slate-200 text-slate-600 p-2 rounded-lg transition" title="Back to My Orgs">
+                                <i className="fa-solid fa-arrow-left"></i>
+                            </a>
+                            <div className="flex items-center gap-2">
+                                <div className="bg-brand-950 text-white p-2 rounded-lg flex items-center justify-center">
+                                    <i className="fa-solid fa-wallet text-lg"></i>
+                                </div>
+                                <span className="font-bold text-xl text-slate-800 tracking-tight">{org.organization_name}</span>
+                            </div>
+                        </div>
+
+                        <nav className="flex items-center gap-6">
+                            <a href="/dashboard" className="text-slate-500 hover:text-slate-800 text-sm font-semibold flex items-center gap-1.5 transition">
+                                <i className="fa-solid fa-building-ngo"></i> My Orgs
+                            </a>
+                            <a href="/profile" className="text-slate-500 hover:text-slate-800 text-sm font-semibold flex items-center gap-1.5 transition">
+                                <i className="fa-solid fa-user-circle text-lg"></i> Profile
+                            </a>
+                        </nav>
+                    </div>
+                </header>
+
+                {/* Main Content */}
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Breadcrumbs */}
+                    <div className="flex items-center gap-2 text-xs font-semibold text-slate-400 mb-6">
+                        <a href="/dashboard" className="hover:text-brand-600 transition">My Orgs</a>
+                        <i className="fa-solid fa-chevron-right text-[10px]"></i>
+                        <span className="text-slate-700">{org.organization_name}</span>
+                    </div>
+
+                    {/* Top Hero Banner */}
+                    <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-sm mb-8">
+                        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+                            <div>
+                                <div className="flex items-center gap-3 flex-wrap mb-2">
+                                    <h1 className="text-3xl font-extrabold text-slate-900 tracking-tight">{org.organization_name}</h1>
+                                    <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                                        org.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                    }`}>
+                                        {org.status}
+                                    </span>
+                                    <span className="px-3 py-1 rounded-full text-xs font-semibold bg-brand-50 text-brand-700 border border-brand-100">
+                                        {org.organization_type}
+                                    </span>
+                                </div>
+                                <p className="text-slate-400 text-xs font-mono">slug: {org.organization_slug} • Joined {org.join_date}</p>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                                <button
+                                    onClick={handleExportCSV}
+                                    className="bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold px-4 py-2.5 rounded-xl border border-slate-200 shadow-sm text-sm transition flex items-center gap-2"
+                                >
+                                    <i className="fa-solid fa-file-csv text-base text-emerald-600"></i> Export Transactions CSV
+                                </button>
+                                {canEdit && !isEditing && (
+                                    <button
+                                        onClick={() => { setEditForm(org); setIsEditing(true); }}
+                                        className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2.5 rounded-xl shadow-md text-sm transition flex items-center gap-2"
+                                    >
+                                        <i className="fa-solid fa-pen-to-square"></i> Edit Metadata
+                                    </button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Flash Notifications */}
+                    {error && (
+                        <div className="bg-rose-50 border border-rose-200 text-rose-700 text-sm p-4 rounded-xl mb-6 flex items-center gap-2">
+                            <i className="fa-solid fa-triangle-exclamation text-base"></i>
+                            <span>{error}</span>
+                        </div>
+                    )}
+                    {successMsg && (
+                        <div className="bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm p-4 rounded-xl mb-6 flex items-center gap-2">
+                            <i className="fa-solid fa-circle-check text-base"></i>
+                            <span>{successMsg}</span>
+                        </div>
+                    )}
+
+                    {/* Metadata Card (Display / Form) */}
+                    <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-sm mb-8">
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i className="fa-solid fa-circle-info text-brand-600"></i> Organization Metadata
+                            </h2>
+                            {canEdit && isEditing && (
+                                <span className="text-xs bg-amber-50 text-amber-700 border border-amber-200 font-medium px-2.5 py-1 rounded-md">
+                                    Editing Mode
+                                </span>
+                            )}
+                        </div>
+
+                        {isEditing ? (
+                            <form onSubmit={handleSave} className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Organization Name</label>
+                                        <input
+                                            type="text"
+                                            required
+                                            value={editForm.organization_name}
+                                            onChange={(e) => setEditForm({ ...editForm, organization_name: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Organization Slug (Read-only)</label>
+                                        <input
+                                            type="text"
+                                            disabled
+                                            value={editForm.organization_slug}
+                                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-slate-100 font-mono text-xs text-slate-500"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Organization Type</label>
+                                        <select
+                                            value={editForm.organization_type}
+                                            onChange={(e) => setEditForm({ ...editForm, organization_type: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm"
+                                        >
+                                            <option value="Fiscal Sponsorship">Fiscal Sponsorship</option>
+                                            <option value="Event">Event</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Status</label>
+                                        <select
+                                            value={editForm.status}
+                                            onChange={(e) => setEditForm({ ...editForm, status: e.target.value })}
+                                            className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm"
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Archived">Archived</option>
+                                            <option value="Dormant">Dormant</option>
+                                            <option value="Closed">Closed</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Description</label>
+                                    <textarea
+                                        rows="3"
+                                        value={editForm.description}
+                                        onChange={(e) => setEditForm({ ...editForm, description: e.target.value })}
+                                        className="w-full px-3.5 py-2.5 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-sm"
+                                    ></textarea>
+                                </div>
+
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Website URL</label>
+                                        <input
+                                            type="url"
+                                            value={editForm.website_url}
+                                            onChange={(e) => setEditForm({ ...editForm, website_url: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Source Code URL</label>
+                                        <input
+                                            type="url"
+                                            value={editForm.source_code_url}
+                                            onChange={(e) => setEditForm({ ...editForm, source_code_url: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Donation URL</label>
+                                        <input
+                                            type="url"
+                                            value={editForm.donation_url}
+                                            onChange={(e) => setEditForm({ ...editForm, donation_url: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setIsEditing(false)}
+                                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition text-sm"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={saving}
+                                        className="px-5 py-2.5 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow transition text-sm flex items-center gap-2 disabled:opacity-50"
+                                    >
+                                        {saving && <i className="fa-solid fa-spinner fa-spin"></i>}
+                                        Save Changes
+                                    </button>
+                                </div>
+                            </form>
+                        ) : (
+                            <div className="space-y-6">
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                    <div>
+                                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Description</span>
+                                        <p className="text-slate-700 text-sm">{org.description || <em className="text-slate-400 font-normal">No description provided.</em>}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Type & Status</span>
+                                        <p className="text-slate-700 text-sm font-medium">{org.organization_type} • {org.status}</p>
+                                    </div>
+                                    <div>
+                                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Your Permission Level</span>
+                                        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-xs font-semibold bg-indigo-50 text-indigo-700 border border-indigo-100">
+                                            <i className="fa-solid fa-key"></i> {PERM_LEVEL || 'View'}
+                                        </span>
+                                    </div>
+                                </div>
+
+                                <div className="pt-4 border-t border-slate-100 grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm">
+                                    <div>
+                                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Website</span>
+                                        {org.website_url ? (
+                                            <a href={org.website_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline flex items-center gap-1">
+                                                <i className="fa-solid fa-globe"></i> {org.website_url}
+                                            </a>
+                                        ) : <span className="text-slate-400">N/A</span>}
+                                    </div>
+                                    <div>
+                                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Source Code</span>
+                                        {org.source_code_url ? (
+                                            <a href={org.source_code_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline flex items-center gap-1">
+                                                <i className="fa-brands fa-github"></i> Repository
+                                            </a>
+                                        ) : <span className="text-slate-400">N/A</span>}
+                                    </div>
+                                    <div>
+                                        <span className="text-xs font-semibold text-slate-400 uppercase tracking-wider block mb-1">Donation Link</span>
+                                        {org.donation_url ? (
+                                            <a href={org.donation_url} target="_blank" rel="noreferrer" className="text-brand-600 hover:underline flex items-center gap-1">
+                                                <i className="fa-solid fa-heart text-rose-500"></i> Donate Link
+                                            </a>
+                                        ) : <span className="text-slate-400">N/A</span>}
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Funding Sources Section */}
+                    <div className="bg-white rounded-2xl border border-slate-200/90 p-6 sm:p-8 shadow-sm">
+                        <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-100">
+                            <h2 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                <i className="fa-solid fa-piggy-bank text-emerald-600"></i> Funding Sources
+                            </h2>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="bg-slate-50 border border-slate-200 rounded-xl p-5 hover:border-slate-300 transition">
+                                <div className="flex items-start justify-between mb-3">
+                                    <div>
+                                        <h3 className="font-bold text-slate-800 text-base">General Funding Source</h3>
+                                        <span className="text-xs text-slate-400 font-mono">Default Unrestricted Account</span>
+                                    </div>
+                                    <span className="bg-emerald-100 text-emerald-800 text-xs font-semibold px-2.5 py-1 rounded-full">Active</span>
+                                </div>
+                                <p className="text-xs text-slate-600 mb-4">
+                                    Unrestricted default funding source for general organization expenses and operational costs not tied to specific grants.
+                                </p>
+                                <div className="flex items-center justify-between pt-3 border-t border-slate-200 text-xs text-slate-500">
+                                    <span>Type: Unrestricted</span>
+                                    <span className="font-semibold text-slate-700">Available: Uncapped</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </main>
+            </div>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('org-detail-root')).render(<OrgDetailApp />);
+{% endraw %}
+</script>
+{% endblock %}
