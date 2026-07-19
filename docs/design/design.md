@@ -41,23 +41,64 @@ without opening the HTML files.
 
 **Program Manager**
 
-`![My Orgs](screenshots/pm-my-orgs.png)`
-`![Org detail](screenshots/pm-org-detail.png)`
-`![Funding Source detail](screenshots/pm-funding-source-detail.png)`
+`[My Orgs](screenshots/pm-my-orgs.png)`
+<img src="screenshots/pm-my-orgs.png"
+     alt="PM My Orgs"
+     style="width:9in;height:5.06in" />
+
+`[Org detail](screenshots/pm-org-detail.png)`
+<img src="screenshots/pm-org-detail.png"
+     alt="PM Org Detail"
+     style="width:9in;height:5.06in" />
+
+`[Funding Source detail](screenshots/pm-funding-source-detail.png)`
+<img src="screenshots/pm-funding-source-detail.png"
+     alt="PM Funding Source Detail"
+     style="width:9in;height:5.06in" />
 
 **Administrator**
 
-`![Organizations](screenshots/admin-organizations.png)`
-`![Org detail](screenshots/admin-org-detail.png)`
-`![Users](screenshots/admin-users.png)`
-`![Imports & Mapping](screenshots/admin-imports-mapping.png)`
-`![Audit Log](screenshots/admin-audit-log.png)`
+`[Organizations](screenshots/admin-organizations.png)`
+<img src="screenshots/admin-organizations.png"
+     alt="Admin Organizations"
+     style="width:9in;height:5.06in" />
+
+`[Org detail](screenshots/admin-org-detail.png)`
+<img src="screenshots/admin-org-detail.png"
+     alt="Admin Organization Detail"
+     style="width:9in;height:5.06in" />
+
+`[Users](screenshots/admin-users.png)`
+<img src="screenshots/admin-users.png"
+     alt="Admin Users"
+     style="width:9in;height:5.06in" />
+
+`[Imports & Mapping](screenshots/admin-imports-mapping.png)`
+<img src="screenshots/admin-imports-mapping.png"
+     alt="Admin Imports Mapping"
+     style="width:9in;height:5.06in" />
+
+`[Audit Log](screenshots/admin-audit-log.png)`
+<img src="screenshots/admin-audit-log.png"
+     alt="Admin Audit Log"
+     style="width:9in;height:5.06in" />
 
 **Project Stakeholder**
 
-`![My Orgs](screenshots/stakeholder-my-orgs.png)`
-`![Org detail](screenshots/stakeholder-org-detail.png)`
-`![Funding Source detail](screenshots/stakeholder-funding-source-detail.png)`
+`[My Orgs](screenshots/stakeholder-my-orgs.png)`
+<img src="screenshots/stakeholder-my-orgs.png"
+     alt="Stakeholder My Orgs"
+     style="width:9in;height:5.06in" />
+
+`[Org detail](screenshots/stakeholder-org-detail.png)`
+<img src="screenshots/stakeholder-org-detail.png"
+     alt="Stakeholder Org Detail"
+     style="width:9in;height:5.06in" />
+
+`[Funding Source detail](screenshots/stakeholder-funding-source-detail.png)`
+<img src="screenshots/stakeholder-funding-source-detail.png"
+     alt="Stakeholder Funding Source Detail"
+     style="width:9in;height:5.06in" />
 
 ## 3. Scope
 
