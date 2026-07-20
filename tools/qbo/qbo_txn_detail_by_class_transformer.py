@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
-"""Report transformation logic for QBO Purchases by Class Detail exports.
+"""Report transformation logic for QBO transaction-detail-by-class exports.
 
-This module is called by qbo_txn_detail_by_class_report_transform.py.
-It does not parse command-line arguments. It reads the validated source workbook,
-creates a new workbook containing one worksheet named "Upload", and saves it to
-the output path supplied by the launcher.
+This module is called by the pipeline orchestrator. It does not parse command-line
+arguments. It reads the validated source workbook, loads shared configuration
+from organization_registry.yaml, creates a new workbook containing one worksheet
+named "Upload", and saves it to the output path supplied by the orchestrator.
 """
 from __future__ import annotations
 
@@ -12,9 +12,12 @@ import re
 from pathlib import Path
 from typing import Any
 
+import yaml
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
+
+ORGANIZATION_REGISTRY_FILENAME = "organization_registry.yaml"
 
 SOURCE_HEADERS = [
     "Class_Blocks",
@@ -39,7 +42,7 @@ OUTPUT_HEADERS = SOURCE_HEADERS + [
     "Derived_Class_1",
     "Backup_Class_2",
     "Data_Row_1",
-    "GSoC_GSoD_Modifier",
+    "Special_Program_Prefix",
     "Derived_Class_2",
     "Remove_Deleted",
     "SDG_Round_1",
@@ -71,6 +74,126 @@ def text(value: Any) -> str:
     return "" if value is None else str(value).strip()
 
 
+
+def load_special_program_rules(
+    yaml_directory: Path,
+) -> dict[str, Any]:
+    """Load and validate cross-organization prefix rules from the registry."""
+    yaml_path = (
+        Path(yaml_directory).expanduser().resolve()
+        / ORGANIZATION_REGISTRY_FILENAME
+    )
+
+    if not yaml_path.exists():
+        raise FileNotFoundError(
+            f"Required organization registry not found: {yaml_path}"
+        )
+    if not yaml_path.is_file():
+        raise ValueError(
+            f"Organization registry path is not a file: {yaml_path}"
+        )
+
+    try:
+        with yaml_path.open("r", encoding="utf-8") as yaml_file:
+            config = yaml.safe_load(yaml_file) or {}
+    except yaml.YAMLError as exc:
+        raise ValueError(f"Invalid YAML in {yaml_path}: {exc}") from exc
+
+    if not isinstance(config, dict):
+        raise ValueError(
+            f"Organization registry root must be a mapping: {yaml_path}"
+        )
+
+    if config.get("schema") != "organization_registry":
+        raise ValueError(
+            f"YAML file is not an organization registry: {yaml_path}"
+        )
+
+    organizations = config.get("organizations")
+    if not isinstance(organizations, dict) or not organizations:
+        raise ValueError(
+            f"'organizations' must be a nonempty mapping in {yaml_path}"
+        )
+
+    options = config.get("options", {})
+    if options is None:
+        options = {}
+    if not isinstance(options, dict):
+        raise ValueError(
+            f"'options' must be a mapping in {yaml_path}"
+        )
+
+    ignore_case = options.get("ignore_case", True)
+    if not isinstance(ignore_case, bool):
+        raise ValueError(
+            f"'options.ignore_case' must be true or false in {yaml_path}"
+        )
+
+    rules = config.get("special_programs", [])
+    if rules is None:
+        rules = []
+    if not isinstance(rules, list):
+        raise ValueError(
+            f"'special_programs' must be a list in {yaml_path}"
+        )
+
+    validated_rules: list[dict[str, Any]] = []
+
+    for index, rule in enumerate(rules, start=1):
+        if not isinstance(rule, dict):
+            raise ValueError(
+                f"special_programs entry {index} must be a mapping "
+                f"in {yaml_path}"
+            )
+
+        prefix = rule.get("prefix")
+        match_values = rule.get("match")
+
+        if not isinstance(prefix, str) or not prefix.strip():
+            raise ValueError(
+                f"special_programs entry {index} requires "
+                "a nonblank 'prefix'"
+            )
+
+        if not isinstance(match_values, list) or not match_values:
+            raise ValueError(
+                f"special_programs entry {index} requires "
+                "a nonempty 'match' list"
+            )
+
+        normalized_matches: list[str] = []
+
+        for match_index, match_value in enumerate(
+            match_values,
+            start=1,
+        ):
+            if not isinstance(match_value, str) or not match_value.strip():
+                raise ValueError(
+                    "special_programs entry "
+                    f"{index}, match item {match_index} "
+                    "must be nonblank text"
+                )
+
+            normalized_match = match_value.strip()
+
+            if ignore_case:
+                normalized_match = normalized_match.casefold()
+
+            normalized_matches.append(normalized_match)
+
+        validated_rules.append(
+            {
+                "prefix": prefix.strip(),
+                "match": normalized_matches,
+            }
+        )
+
+    return {
+        "ignore_case": ignore_case,
+        "rules": validated_rules,
+    }
+
+
 def find_download_header_row(ws: Worksheet) -> int:
     """Locate the QBO column-heading row instead of assuming a fixed row."""
     for row in range(1, min(ws.max_row, 50) + 1):
@@ -87,12 +210,20 @@ def find_download_header_row(ws: Worksheet) -> int:
     )
 
 
-def gsoc_gsod_modifier(*values: Any) -> str:
-    combined = " | ".join(text(value) for value in values).casefold()
-    if "gsoc" in combined or "google summer of code" in combined:
-        return "GSoC - "
-    if "gsod" in combined or "google season of docs" in combined:
-        return "GSoD - "
+def special_program_prefix(
+    *values: Any,
+    rules: dict[str, Any],
+) -> str:
+    """Return the first configured prefix whose match text appears in the values."""
+    combined = " | ".join(text(value) for value in values)
+
+    if rules["ignore_case"]:
+        combined = combined.casefold()
+
+    for rule in rules["rules"]:
+        if any(match_text in combined for match_text in rule["match"]):
+            return str(rule["prefix"])
+
     return ""
 
 
@@ -127,6 +258,7 @@ def is_transaction_row(transaction_date: Any, carried_class: str) -> bool:
 def prepare_upload_sheet(
     ws_source: Worksheet,
     ws_upload: Worksheet,
+    special_program_rules: list[dict[str, Any]],
     starting_identifier: int = 100002,
 ) -> dict[str, int]:
     header_row = find_download_header_row(ws_source)
@@ -150,10 +282,11 @@ def prepare_upload_sheet(
             excluded_rows += 1
             continue
 
-        modifier = gsoc_gsod_modifier(
+        modifier = special_program_prefix(
             current_class,
             source_values[11],
             source_values[6],
+            rules=special_program_rules,
         )
         derived_class_2 = f"{modifier}{current_class}"
         cleaned_class = strip_deleted_marker(derived_class_2)
@@ -215,19 +348,31 @@ def prepare_upload_sheet(
     }
 
 
-def transform_report(input_path: Path, output_path: Path) -> dict[str, int]:
+def transform_report(
+    input_path: Path,
+    output_path: Path,
+    yaml_directory: Path,
+) -> dict[str, int]:
     """Create the initial Upload workbook from a validated QBO report."""
+    special_program_rules = load_special_program_rules(yaml_directory)
+
     source_workbook = load_workbook(input_path, read_only=True, data_only=False)
     try:
         source_sheet = source_workbook[source_workbook.sheetnames[0]]
 
         output_workbook = Workbook()
-        upload_sheet = output_workbook.active
-        upload_sheet.title = "Upload"
+        try:
+            upload_sheet = output_workbook.active
+            upload_sheet.title = "Upload"
 
-        counts = prepare_upload_sheet(source_sheet, upload_sheet)
-        output_workbook.save(output_path)
-        output_workbook.close()
+            counts = prepare_upload_sheet(
+                source_sheet,
+                upload_sheet,
+                special_program_rules,
+            )
+            output_workbook.save(output_path)
+        finally:
+            output_workbook.close()
     finally:
         source_workbook.close()
 

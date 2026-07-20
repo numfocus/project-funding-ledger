@@ -1,28 +1,9 @@
 #!/usr/bin/env python3
-"""Finalize the Upload worksheet for the PFL transaction import.
+"""Finalize the Upload worksheet for transaction import.
 
-This module is intended to run after:
-
-    qbo_txn_detail_by_class_transformer.py
-    qbo_txn_detail_by_class_dimensioner.py
-
-It modifies the workbook in place by:
-
-1. Keeping only rows whose QBO_Project is an approved Version 0.1 project.
-2. Rebuilding the Upload worksheet with exactly these columns:
-
-       PFL_Transaction_Key
-       Organization
-       Funding_Source
-       Transaction_Date
-       Transaction_Type
-       Counter_Party
-       Distribution_Account
-       Memo_Description
-       Amount
-
-PFL_Trasaction_Key is intentionally duplicated from Funding_Source, following
-Version 0.1 requirements.
+This module runs after the transformer and dimensioner. It filters rows using
+organization approval status from organization_registry.yaml, then rebuilds
+the Upload worksheet in the required import layout.
 """
 from __future__ import annotations
 
@@ -30,10 +11,13 @@ import sys
 from pathlib import Path
 from typing import Any
 
+import yaml
 from openpyxl import load_workbook
 from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.worksheet.worksheet import Worksheet
 
+
+ORGANIZATION_REGISTRY_FILENAME = "organization_registry.yaml"
 UPLOAD_SHEET = "Upload"
 
 FINAL_HEADERS = [
@@ -47,81 +31,6 @@ FINAL_HEADERS = [
     "Memo_Description",
     "Amount",
 ]
-
-APPROVED_ORGANIZATIONS = {
-    "ArviZ",
-    "Astropy",
-    "Bactopia",
-    "biocommons",
-    "Bioconductor",
-    "Blosc",
-    "Bokeh",
-    "Cantera",
-    "conda",
-    "conda-forge",
-    "CuPy",
-    "Dask",
-    "data.table",
-    "Dynare",
-    "Econ-ARK",
-    "FEniCS",
-    "Fortran-lang",
-    "Gammapy",
-    "GDAL",
-    "GeoPandas",
-    "GNU Octave",
-    "Grant Witness",
-    "GRASS",
-    "HoloViz",
-    "ITK",
-    "Julia",
-    "JuMP",
-    "LFortran",
-    "matplotlib",
-    "MDAnalysis",
-    "Micro-manager",
-    "mlpack",
-    "napari",
-    "NetworkX",
-    "nibabel",
-    "nteract",
-    "NumPy",
-    "Open Journals",
-    "OpenFHE",
-    "OpenMBEE",
-    "OpenProblems.bio",
-    "pandas",
-    "Pangeo",
-    "Parsl",
-    "PETSc",
-    "PyBaMM",
-    "PyMC",
-    "PyTables",
-    "QuantEcon",
-    "rOpenSci",
-    "Scientific Python",
-    "scikit-image",
-    "scikit-learn",
-    "SciML",
-    "SciPy",
-    "scverse",
-    "sgkit",
-    "Spyder",
-    "Stan",
-    "SunPy",
-    "SymPy",
-    "TARDIS",
-    "Vega",
-    "VisPy",
-    "WWT",
-    "xarray",
-    "yt",
-    "Zarr",
-}
-
-APPROVED_ORGANIZATIONS_CASEFOLD = {
-    organization.casefold(): organization for organization in APPROVED_ORGANIZATIONS
-}
 
 REQUIRED_SOURCE_HEADERS = {
     "Transaction_Date",
@@ -141,6 +50,119 @@ HEADER_FONT = Font(color="FFFFFF", bold=True)
 def text(value: Any) -> str:
     return "" if value is None else str(value).strip()
 
+
+def resolve_registry_path(
+    registry_path: Path | None = None,
+) -> Path:
+    """Resolve the organization registry path.
+
+    Search order when no path is supplied:
+
+    1. config/organization_registry.yaml beside this module
+    2. organization_registry.yaml beside this module
+    """
+    if registry_path is not None:
+        resolved = Path(registry_path).expanduser().resolve()
+        if not resolved.exists():
+            raise FileNotFoundError(
+                f"Organization registry does not exist: {resolved}"
+            )
+        if not resolved.is_file():
+            raise ValueError(
+                f"Organization registry path is not a file: {resolved}"
+            )
+        return resolved
+
+    module_directory = Path(__file__).resolve().parent
+    candidates = (
+        module_directory / "config" / ORGANIZATION_REGISTRY_FILENAME,
+        module_directory / ORGANIZATION_REGISTRY_FILENAME,
+    )
+
+    for candidate in candidates:
+        if candidate.is_file():
+            return candidate
+
+    searched = ", ".join(str(path) for path in candidates)
+    raise FileNotFoundError(
+        f"Could not find {ORGANIZATION_REGISTRY_FILENAME}. "
+        f"Searched: {searched}"
+    )
+
+
+def load_organization_registry(
+    registry_path: Path | None = None,
+) -> dict[str, Any]:
+    """Load the registry and derive the approved organization allowlist."""
+    resolved_path = resolve_registry_path(registry_path)
+
+    with resolved_path.open("r", encoding="utf-8") as registry_file:
+        raw_registry = yaml.safe_load(registry_file) or {}
+
+    if not isinstance(raw_registry, dict):
+        raise ValueError(
+            f"Organization registry must contain a YAML mapping: {resolved_path}"
+        )
+
+    if raw_registry.get("schema") != "organization_registry":
+        raise ValueError(
+            f"YAML file is not an organization registry: {resolved_path}"
+        )
+
+    organizations = raw_registry.get("organizations")
+    if not isinstance(organizations, dict) or not organizations:
+        raise ValueError(
+            "Organization registry must contain a non-empty "
+            "'organizations' mapping."
+        )
+
+    approved_organizations: list[str] = []
+    approved_casefold: set[str] = set()
+
+    for stable_id, record in organizations.items():
+        if not isinstance(stable_id, str) or not stable_id.strip():
+            raise ValueError(
+                "Organization registry contains a blank stable organization ID."
+            )
+        if not isinstance(record, dict):
+            raise ValueError(
+                f"Organization {stable_id!r} must be a YAML mapping."
+            )
+
+        organization_name = text(record.get("name"))
+        if not organization_name:
+            raise ValueError(
+                f"Organization {stable_id!r} requires a nonblank name."
+            )
+
+        approved = record.get("approved")
+        if not isinstance(approved, bool):
+            raise ValueError(
+                f"Organization {stable_id!r} requires a boolean "
+                "'approved' value."
+            )
+
+        normalized_name = organization_name.casefold()
+        if normalized_name in approved_casefold:
+            raise ValueError(
+                "Organization registry contains duplicate approved "
+                f"organization names: {organization_name}"
+            )
+
+        if approved:
+            approved_organizations.append(organization_name)
+            approved_casefold.add(normalized_name)
+
+    if not approved_organizations:
+        raise ValueError(
+            "Organization registry contains no organizations with approved: true."
+        )
+
+    return {
+        "approved_organizations": approved_organizations,
+        "approved_organizations_casefold": approved_casefold,
+        "registry_path": resolved_path,
+    }
 
 def header_map(ws: Worksheet) -> dict[str, int]:
     """Return a mapping of header name to one-based column number."""
@@ -163,13 +185,17 @@ def validate_upload_sheet(ws: Worksheet) -> dict[str, int]:
     return headers
 
 
-def approved_organization(value: Any) -> bool:
-    """Use case-insensitive exact matching against the Version 0.1 project list."""
-    return text(value).casefold() in APPROVED_ORGANIZATIONS_CASEFOLD
+def approved_organization(value: Any, approved_casefold: set[str]) -> bool:
+    """Return whether a value exactly matches a configured organization."""
+    return text(value).casefold() in approved_casefold
 
 
-def collect_final_rows(ws: Worksheet, headers: dict[str, int]) -> tuple[list[list[Any]], dict[str, int]]:
-    """Filter project rows and construct the final nine-column row set."""
+def collect_final_rows(
+    ws: Worksheet,
+    headers: dict[str, int],
+    approved_casefold: set[str],
+) -> tuple[list[list[Any]], dict[str, int]]:
+    """Filter configured organization rows and build the final row set."""
     final_rows: list[list[Any]] = []
     kept = 0
     removed = 0
@@ -182,16 +208,19 @@ def collect_final_rows(ws: Worksheet, headers: dict[str, int]) -> tuple[list[lis
             skipped_blank += 1
             continue
 
-        if not approved_organization(organization):
+        if not approved_organization(organization, approved_casefold):
             removed += 1
             continue
 
-        funding_source = ws.cell(row_number, headers["QBO_Funding_Source"]).value
+        funding_source = ws.cell(
+            row_number,
+            headers["QBO_Funding_Source"],
+        ).value
 
         final_rows.append(
             [
-                funding_source,  # PFL_Trasaction_Key duplicates Funding_Source
-                organization,    # QBO_Project renamed to Organization
+                funding_source,
+                organization,
                 funding_source,
                 ws.cell(row_number, headers["Transaction_Date"]).value,
                 ws.cell(row_number, headers["Transaction_Type"]).value,
@@ -211,7 +240,7 @@ def collect_final_rows(ws: Worksheet, headers: dict[str, int]) -> tuple[list[lis
 
 
 def rebuild_upload_sheet(ws: Worksheet, final_rows: list[list[Any]]) -> None:
-    """Replace the worksheet contents with the final PFL import layout."""
+    """Replace the worksheet contents with the final import layout."""
     if ws.max_row > 0:
         ws.delete_rows(1, ws.max_row)
 
@@ -222,7 +251,11 @@ def rebuild_upload_sheet(ws: Worksheet, final_rows: list[list[Any]]) -> None:
     for cell in ws[1]:
         cell.fill = HEADER_FILL
         cell.font = HEADER_FONT
-        cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        cell.alignment = Alignment(
+            horizontal="center",
+            vertical="center",
+            wrap_text=True,
+        )
 
     ws.freeze_panes = "A2"
     ws.auto_filter.ref = f"A1:I{ws.max_row}"
@@ -247,7 +280,10 @@ def rebuild_upload_sheet(ws: Worksheet, final_rows: list[list[Any]]) -> None:
         ws.cell(row_number, 9).number_format = "#,##0.00;[Red]-#,##0.00"
 
 
-def finalize_upload(workbook_path: Path) -> dict[str, int]:
+def finalize_upload(
+    workbook_path: Path,
+    registry_path: Path | None = None,
+) -> dict[str, int]:
     """Finalize the Upload worksheet in place and return processing counts."""
     workbook_path = Path(workbook_path).expanduser().resolve()
 
@@ -257,6 +293,9 @@ def finalize_upload(workbook_path: Path) -> dict[str, int]:
         raise FileNotFoundError(f"Workbook does not exist: {workbook_path}")
     if not workbook_path.is_file():
         raise ValueError(f"Workbook path is not a file: {workbook_path}")
+
+    registry = load_organization_registry(registry_path)
+    approved_casefold = registry["approved_organizations_casefold"]
 
     workbook = load_workbook(workbook_path)
     try:
@@ -268,7 +307,11 @@ def finalize_upload(workbook_path: Path) -> dict[str, int]:
 
         ws = workbook[UPLOAD_SHEET]
         headers = validate_upload_sheet(ws)
-        final_rows, counts = collect_final_rows(ws, headers)
+        final_rows, counts = collect_final_rows(
+            ws,
+            headers,
+            approved_casefold,
+        )
         rebuild_upload_sheet(ws, final_rows)
         workbook.save(workbook_path)
     finally:
@@ -278,17 +321,19 @@ def finalize_upload(workbook_path: Path) -> dict[str, int]:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 1:
+    if len(argv) not in (1, 2):
         print(
-            "Usage: python3 qbo_txn_detail_by_class_finalizer.py <workbook.xlsx>",
+            "Usage: python3 qbo_txn_detail_by_class_finalizer.py "
+            "<workbook.xlsx> [organization_registry.yaml]",
             file=sys.stderr,
         )
         return 2
 
     workbook_path = Path(argv[0])
+    registry_path = Path(argv[1]) if len(argv) == 2 else None
 
     try:
-        counts = finalize_upload(workbook_path)
+        counts = finalize_upload(workbook_path, registry_path)
     except Exception as exc:
         print(f"ERROR: {exc}", file=sys.stderr)
         return 1
