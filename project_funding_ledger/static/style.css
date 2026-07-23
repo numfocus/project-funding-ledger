@@ -76,8 +76,9 @@ body::after {
 main {
     z-index: 10;
     width: 100%;
-    max-width: 480px;
-    padding: 20px;
+    max-width: 1180px;
+    padding: 24px;
+    margin: 0 auto;
 }
 
 /* Glassmorphic Container Card */
@@ -102,6 +103,30 @@ main {
 .card-header {
     text-align: center;
     margin-bottom: 32px;
+}
+
+.page-shell {
+    background: #ffffff;
+    border: 1px solid rgba(148, 163, 184, 0.18);
+    border-radius: 28px;
+    padding: 34px;
+    box-shadow: 0 30px 80px rgba(15, 23, 42, 0.08);
+    color: #111827;
+}
+
+.page-shell .card-header {
+    text-align: left;
+}
+
+.page-shell .brand-title {
+    background: none;
+    -webkit-text-fill-color: #111827;
+    color: #111827;
+}
+
+.page-shell .brand-subtitle,
+.page-shell .sponsor-description {
+    color: #374151;
 }
 
 .brand-title {
@@ -234,6 +259,176 @@ main {
     border: 1px solid rgba(255, 255, 255, 0.04);
     border-radius: 12px;
     padding: 16px;
+}
+
+/* Public organization list and detail styles */
+.org-grid {
+    display: grid;
+    gap: 18px;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.org-card {
+    position: relative;
+    background: rgba(15, 23, 42, 0.45);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 20px;
+    padding: 24px;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.org-card-link {
+    position: absolute;
+    inset: 0;
+    z-index: 1;
+    border-radius: inherit;
+}
+
+.org-card * {
+    position: relative;
+    z-index: 2;
+}
+
+.org-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+}
+
+.org-card-header {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 16px;
+}
+
+.sponsor-hero {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 24px;
+}
+
+.site-logo {
+    width: 110px;
+    height: auto;
+    flex-shrink: 0;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 12px;
+}
+
+.sponsor-description {
+    color: var(--text-secondary);
+    font-size: 15px;
+    line-height: 1.75;
+    margin-top: 10px;
+    max-width: 720px;
+}
+
+.org-card h2 {
+    font-size: 22px;
+    margin-bottom: 6px;
+}
+
+.org-card h2 a {
+    color: var(--text-primary);
+    text-decoration: none;
+}
+
+.org-card h2 a:hover {
+    color: #a7f3d0;
+}
+
+.org-type {
+    color: var(--text-secondary);
+    font-size: 13px;
+    margin-top: 4px;
+}
+
+.org-description {
+    color: var(--text-secondary);
+    line-height: 1.75;
+    margin-bottom: 18px;
+}
+
+.org-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.link-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 16px;
+    border-radius: 12px;
+    background: rgba(16, 185, 129, 0.15);
+    color: #d1fae5;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.link-secondary {
+    background: rgba(59, 130, 246, 0.16);
+}
+
+.link-button:hover {
+    background: rgba(16, 185, 129, 0.26);
+}
+
+@media (min-width: 768px) {
+    .org-card-header {
+        flex-direction: row;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .org-links {
+        justify-content: flex-end;
+    }
+}
+
+.org-detail-grid {
+    display: grid;
+    gap: 24px;
+}
+
+.org-detail-main {
+    display: grid;
+    gap: 20px;
+}
+
+.org-meta-row {
+    display: grid;
+    gap: 16px;
+}
+
+.meta-label {
+    display: inline-block;
+    margin-bottom: 6px;
+    color: var(--text-secondary);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.org-detail-grid p {
+    color: var(--text-secondary);
+    line-height: 1.75;
+}
+
+.org-detail-grid a {
+    color: #a7f3d0;
+}
+
+.org-detail-grid a:hover {
+    color: #6ee7b7;
 }
 
 .info-label {
