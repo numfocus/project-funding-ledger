@@ -125,10 +125,14 @@ def is_number(value: Any) -> bool:
     if isinstance(value, (int, float)) and not isinstance(value, bool):
         return True
     try:
-        float(str(value).strip())
-        return True
-    except Exception:
+        converted = str(value).strip()
+        if value.lower() in ("inf", "-inf", "nan"):
+            raise ValueError
+        float(converted)
+    except ValueError:
         return False
+    else:
+        return True
 
 
 def as_date(value: Any) -> Optional[date]:
