@@ -1,0 +1,73 @@
+{% extends "base.html" %} {% block title %}Sponsored Projects | Project Funding
+Ledger{% endblock %} {% block content %}
+<div class="page-shell">
+  <div class="card-header sponsor-hero">
+    <img
+      src="{{ url_for('static', filename='numfocus-logo.png') }}"
+      alt="NumFOCUS logo"
+      class="site-logo"
+    />
+    <div>
+      <h1 class="brand-title">Sponsored Projects</h1>
+      <p class="brand-subtitle">
+        From NumFOCUS fiscally sponsored projects to affiliated collaborations,
+        explore open source tools solving challenging problems.
+      </p>
+      <p class="sponsor-description">
+        Browse projects by mission, status, and support opportunities. Click a
+        project name for more detail or to donate directly.
+      </p>
+    </div>
+  </div>
+
+  <div class="org-grid">
+    {% for org in organizations %}
+    <article class="org-card">
+      <a class="org-card-link"
+         href="{{ url_for('public_org.organization_detail', slug=org.organization_slug) }}"
+         aria-label="View details for {{ org.organization_name }}">
+      </a>
+      <div class="org-card-header">
+        <div>
+          <h2>
+            <a
+              href="{{ url_for('public_org.organization_detail', slug=org.organization_slug) }}"
+              >{{ org.organization_name }}</a
+            >
+          </h2>
+          <p class="org-type">{{ org.organization_type }}</p>
+        </div>
+        <span
+          class="badge {% if org.status == 'Active' %}badge-active{% else %}badge-role{% endif %}"
+          >{{ org.status }}</span
+        >
+      </div>
+
+      <p class="org-description">{{ org.description }}</p>
+
+      <div class="org-links">
+        {% if org.website_url %}
+        <a
+          href="{{ org.website_url }}"
+          target="_blank"
+          rel="noopener"
+          class="link-button"
+          >Website</a
+        >
+        {% endif %} {% if org.donation_url %}
+        <a
+          href="{{ org.donation_url }}"
+          target="_blank"
+          rel="noopener"
+          class="link-button link-secondary"
+          >Donate</a
+        >
+        {% endif %}
+      </div>
+    </article>
+    {% endfor %} {% if organizations|length == 0 %}
+    <p>No public organizations are available.</p>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}
