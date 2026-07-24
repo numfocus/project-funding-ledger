@@ -3,6 +3,7 @@
 {% block title %}Register | Project Funding Ledger{% endblock %}
 
 {% block content %}
+<div class="auth-shell">
 <div class="card" id="register-card">
     <div class="card-header">
         <h1 class="brand-title" id="register-title">Project Funding Ledger</h1>
@@ -52,5 +53,6 @@
     <div class="card-footer" id="register-footer">
         <a href="{{ url_for('auth.login') }}" id="login-link">Already registered? Sign In.</a>
     </div>
+</div>
 </div>
 {% endblock %}

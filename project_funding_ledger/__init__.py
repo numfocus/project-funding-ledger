@@ -33,7 +33,6 @@ def create_app(test_config=None):
     app.register_blueprint(org_import_bp)
     app.register_blueprint(public_org_bp)
 
-
     # After-request hook to persist refreshed Supabase tokens in session cookie
     app.after_request(save_supabase_session)
 
