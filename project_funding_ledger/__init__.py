@@ -6,6 +6,7 @@ from project_funding_ledger.profile import profile_bp
 from project_funding_ledger.supabase_client import save_supabase_session
 from project_funding_ledger.queue.webhooks import tasks_bp
 from project_funding_ledger.routes.org_import import org_import_bp
+from project_funding_ledger.routes.public_org import public_org_bp
 
 # Load environment variables from .env file
 load_dotenv()
@@ -30,7 +31,7 @@ def create_app(test_config=None):
     app.register_blueprint(profile_bp)
     app.register_blueprint(tasks_bp)
     app.register_blueprint(org_import_bp)
-
+    app.register_blueprint(public_org_bp)
 
     # After-request hook to persist refreshed Supabase tokens in session cookie
     app.after_request(save_supabase_session)
