@@ -58,7 +58,7 @@ Ledger{% endblock %} {% block content %}
           href="{{ org.website_url }}"
           target="_blank"
           rel="noopener"
-          class="link-button"
+          class="pill-btn"
           >Website</a
         >
         {% endif %} {% if org.donation_url %}
@@ -66,7 +66,7 @@ Ledger{% endblock %} {% block content %}
           href="{{ org.donation_url }}"
           target="_blank"
           rel="noopener"
-          class="link-button link-secondary"
+          class="pill-btn primary"
           >Donate</a
         >
         {% endif %}
@@ -109,6 +109,7 @@ Ledger{% endblock %} {% block content %}
               target="_blank"
               rel="noopener"
               id="org-modal-website"
+              class="link-btn"
             ></a>
           </p>
         </div>
@@ -123,7 +124,7 @@ Ledger{% endblock %} {% block content %}
           target="_blank"
           rel="noopener"
           id="org-modal-donation"
-          class="donate-button"
+          class="btn btn-primary"
           >Donate</a
         >
         <a
@@ -131,7 +132,7 @@ Ledger{% endblock %} {% block content %}
           target="_blank"
           rel="noopener"
           id="org-modal-source-code"
-          class="source-code-button"
+          class="pill-btn"
           >Source code</a
         >
       </div>
@@ -177,34 +178,36 @@ Ledger{% endblock %} {% block content %}
         modalWebsite.href = website
         modalWebsite.textContent = website.replace(/(^https?:\/\/)/, "")
         modalWebsite.parentElement.style.display = "block"
+        modalWebsite.classList.remove("disabled-link")
       } else {
         modalWebsite.href = "#"
         modalWebsite.textContent = "N/A"
         modalWebsite.parentElement.style.display = "block"
+        modalWebsite.classList.add("disabled-link")
       }
 
       if (donation) {
         modalDonation.href = donation
         modalDonation.textContent = "Donate"
-        modalDonation.classList.add("donate-button")
         modalDonation.classList.remove("disabled-link")
+        modalDonation.classList.add("btn", "btn-primary")
       } else {
         modalDonation.removeAttribute("href")
         modalDonation.textContent = "N/A"
         modalDonation.classList.add("disabled-link")
-        modalDonation.classList.remove("donate-button")
+        modalDonation.classList.remove("btn", "btn-primary")
       }
 
       if (sourceCode) {
         modalSourceCode.href = sourceCode
         modalSourceCode.textContent = "Source code"
-        modalSourceCode.classList.add("source-code-link")
         modalSourceCode.classList.remove("disabled-link")
+        modalSourceCode.classList.add("pill-btn")
       } else {
         modalSourceCode.removeAttribute("href")
         modalSourceCode.textContent = "N/A"
         modalSourceCode.classList.add("disabled-link")
-        modalSourceCode.classList.remove("source-code-link")
+        modalSourceCode.classList.remove("pill-btn")
       }
 
       modalOverlay.hidden = false

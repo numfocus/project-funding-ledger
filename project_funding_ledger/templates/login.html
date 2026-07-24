@@ -1,49 +1,51 @@
 {% extends "base.html" %} {% block title %}Sign In | Project Funding Ledger{%
 endblock %} {% block content %}
-<div class="card" id="login-card">
-  <div class="card-header">
-    <h1 class="brand-title" id="login-title">Project Funding Ledger</h1>
-    <p class="brand-subtitle" id="login-subtitle">
-      Sign in to your organization portal
-    </p>
-  </div>
-
-  <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
-    <div class="form-group">
-      <label class="form-label" for="email-input">Email Address</label>
-      <input
-        type="email"
-        name="email"
-        id="email-input"
-        class="form-input"
-        placeholder="name@example.com"
-        required
-        autocomplete="email"
-      />
+<div class="auth-shell">
+  <div class="card" id="login-card">
+    <div class="card-header">
+      <h1 class="brand-title" id="login-title">Project Funding Ledger</h1>
+      <p class="brand-subtitle" id="login-subtitle">
+        Sign in to your organization portal
+      </p>
     </div>
 
-    <div class="form-group">
-      <label class="form-label" for="password-input">Password</label>
-      <input
-        type="password"
-        name="password"
-        id="password-input"
-        class="form-input"
-        placeholder="••••••••"
-        required
-        autocomplete="current-password"
-      />
+    <form method="POST" action="{{ url_for('auth.login') }}" id="login-form">
+      <div class="form-group">
+        <label class="form-label" for="email-input">Email Address</label>
+        <input
+          type="email"
+          name="email"
+          id="email-input"
+          class="form-input"
+          placeholder="name@example.com"
+          required
+          autocomplete="email"
+        />
+      </div>
+
+      <div class="form-group">
+        <label class="form-label" for="password-input">Password</label>
+        <input
+          type="password"
+          name="password"
+          id="password-input"
+          class="form-input"
+          placeholder="••••••••"
+          required
+          autocomplete="current-password"
+        />
+      </div>
+
+      <button type="submit" class="btn btn-primary" id="login-submit-btn">
+        Sign In
+      </button>
+    </form>
+
+    <div class="card-footer" id="login-footer">
+      <a href="{{ url_for('auth.register') }}" id="register-link"
+        >Have an invite? Register.</a
+      >
     </div>
-
-    <button type="submit" class="btn btn-primary" id="login-submit-btn">
-      Sign In
-    </button>
-  </form>
-
-  <div class="card-footer" id="login-footer">
-    <a href="{{ url_for('auth.register') }}" id="register-link"
-      >Have an invite? Register.</a
-    >
   </div>
 </div>
 {% endblock %}
