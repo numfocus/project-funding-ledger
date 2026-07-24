@@ -223,7 +223,7 @@ end $$;
 -- PostgreSQL database dump
 --
 
--- \restrict dxOf8JrSW2zv1lwrTjlcVcwocswfhrAmJWAsAyUGwgLUMoCgmbTzQkVMdGpUck0
+-- \restrict 2CoKR93vuZysigv42pYBe7aF8PTPadPesJZPbf8H53tZ1uuUMqaLrdGMrhiPrdr
 
 -- Dumped from database version 17.6
 -- Dumped by pg_dump version 17.6
@@ -276,10 +276,20 @@ INSERT INTO "public"."organization_internal" ("id", "overhead_grant", "overhead_
 	('93acbd22-24c9-449a-b9db-e4503e09b554', 0.15, 0.1, 0.1, NULL, '2026-07-19 19:20:52.535172+00', '2026-07-19 19:20:52.535172+00', 'a1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', NULL, NULL),
 	('66e06e5d-f53b-4a3f-9625-660700a83862', 0.15, 0.1, 0.1, NULL, '2026-07-19 19:20:55.452006+00', '2026-07-19 19:20:55.452006+00', 'a1111111-1111-1111-1111-111111111111', 'a1111111-1111-1111-1111-111111111111', NULL, NULL);
 
+
+--
+-- Data for Name: organization_permission; Type: TABLE DATA; Schema: public; Owner: postgres
+--
+
+INSERT INTO "public"."organization_permission" ("id", "user_id", "organization_id", "permission_level", "status", "created_at", "updated_at", "created_by_user_id", "revoked_at", "revoked_by_user_id", "notes") VALUES
+	('c71df6c7-d896-4743-94ba-37d8463ee71b', 'b2222222-2222-2222-2222-222222222222', 'db1ff72a-4dbc-4aa5-ae93-235382df5682', 'Edit Metadata', 'Active', '2026-07-19 21:33:28.705841+00', '2026-07-19 21:33:28.705841+00', 'a1111111-1111-1111-1111-111111111111', NULL, NULL, ''),
+	('6e46015d-1af9-408b-96df-7979c4ce253d', 'b2222222-2222-2222-2222-222222222222', '25a245d8-42b5-40ee-9814-7a25829f214b', 'Edit Metadata', 'Active', '2026-07-19 21:35:01.816358+00', '2026-07-19 21:35:01.816358+00', 'a1111111-1111-1111-1111-111111111111', NULL, NULL, ''),
+	('dec01d46-2c4b-4c21-a29a-1ec263b04466', 'c3333333-3333-3333-3333-333333333333', 'fe3a0786-5d5b-4450-a491-406fa4b62048', 'View', 'Active', '2026-07-19 21:34:44.723886+00', '2026-07-19 21:34:44.723886+00', 'a1111111-1111-1111-1111-111111111111', NULL, NULL, ''),
+	('584b398b-50f2-4409-a6f1-f296acecd2d7', 'c3333333-3333-3333-3333-333333333333', 'db1ff72a-4dbc-4aa5-ae93-235382df5682', 'View', 'Active', '2026-07-19 21:34:49.153504+00', '2026-07-19 21:34:49.153504+00', 'a1111111-1111-1111-1111-111111111111', NULL, NULL, '');
 --
 -- PostgreSQL database dump complete
 --
 
--- \unrestrict dxOf8JrSW2zv1lwrTjlcVcwocswfhrAmJWAsAyUGwgLUMoCgmbTzQkVMdGpUck0
+-- \unrestrict 2CoKR93vuZysigv42pYBe7aF8PTPadPesJZPbf8H53tZ1uuUMqaLrdGMrhiPrdr
 
 RESET ALL;

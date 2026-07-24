@@ -10,6 +10,9 @@ supabase-start:
 dev-db-reset: supabase-start
     npx supabase db reset 
 
+dev-db-dump: supabase-start
+    npx supabase db dump --data-only --local -f ./supabase/seed.sql
+
 redis-start:
     {{ if os() == "windows" { "if (docker ps -a --filter name=local-redis -q) { docker start local-redis } else { docker run -d --name local-redis -p 6379:6379 redis:alpine }" } else { "docker start local-redis 2>/dev/null || docker run -d --name local-redis -p 6379:6379 redis:alpine" } }}
 

@@ -26,7 +26,10 @@ Ledger{% endblock %} {% block content %}
 
   <div class="org-grid">
     {% for org in organizations %}
-    <article class="org-card org-card-trigger" tabindex="0" role="button"
+    <article
+      class="org-card org-card-trigger"
+      tabindex="0"
+      role="button"
       data-name="{{ org.organization_name|e }}"
       data-type="{{ org.organization_type|e }}"
       data-status="{{ org.status|e }}"
@@ -76,20 +79,38 @@ Ledger{% endblock %} {% block content %}
 </div>
 
 <div class="org-modal-overlay" id="org-modal-overlay" hidden>
-  <div class="org-modal" role="dialog" aria-modal="true" aria-labelledby="org-modal-title">
+  <div
+    class="org-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="org-modal-title"
+  >
     <div class="org-modal-header">
       <div>
         <p class="org-modal-type" id="org-modal-type"></p>
         <h2 class="org-modal-title" id="org-modal-title"></h2>
       </div>
-      <button type="button" class="btn btn-secondary modal-close" id="org-modal-close">Close</button>
+      <button
+        type="button"
+        class="btn btn-secondary modal-close"
+        id="org-modal-close"
+      >
+        Close
+      </button>
     </div>
     <div class="org-modal-body">
       <p class="org-modal-description" id="org-modal-description"></p>
       <div class="org-modal-meta">
         <div>
           <span class="meta-label">Website</span>
-          <p><a href="#" target="_blank" rel="noopener" id="org-modal-website"></a></p>
+          <p>
+            <a
+              href="#"
+              target="_blank"
+              rel="noopener"
+              id="org-modal-website"
+            ></a>
+          </p>
         </div>
         <div>
           <span class="meta-label">Joined</span>
@@ -97,130 +118,148 @@ Ledger{% endblock %} {% block content %}
         </div>
       </div>
       <div class="org-modal-actions">
-        <a href="#" target="_blank" rel="noopener" id="org-modal-donation" class="donate-button">Donate</a>
-        <a href="#" target="_blank" rel="noopener" id="org-modal-source-code" class="source-code-button">Source code</a>
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener"
+          id="org-modal-donation"
+          class="donate-button"
+          >Donate</a
+        >
+        <a
+          href="#"
+          target="_blank"
+          rel="noopener"
+          id="org-modal-source-code"
+          class="source-code-button"
+          >Source code</a
+        >
       </div>
     </div>
   </div>
 </div>
 
 <script>
-(function() {
-  const searchInput = document.querySelector('.org-search input');
-  const cards = Array.from(document.querySelectorAll('.org-card-trigger'));
-  const modalOverlay = document.getElementById('org-modal-overlay');
-  const modalClose = document.getElementById('org-modal-close');
-  const modalTitle = document.getElementById('org-modal-title');
-  const modalType = document.getElementById('org-modal-type');
-  const modalDescription = document.getElementById('org-modal-description');
-  const modalWebsite = document.getElementById('org-modal-website');
-  const modalDonation = document.getElementById('org-modal-donation');
-  const modalSourceCode = document.getElementById('org-modal-source-code');
-  const modalJoined = document.getElementById('org-modal-joined');
+  ;(function () {
+    const searchInput = document.querySelector(".org-search input")
+    const cards = Array.from(document.querySelectorAll(".org-card-trigger"))
+    const modalOverlay = document.getElementById("org-modal-overlay")
+    const modalClose = document.getElementById("org-modal-close")
+    const modalTitle = document.getElementById("org-modal-title")
+    const modalType = document.getElementById("org-modal-type")
+    const modalDescription = document.getElementById("org-modal-description")
+    const modalWebsite = document.getElementById("org-modal-website")
+    const modalDonation = document.getElementById("org-modal-donation")
+    const modalSourceCode = document.getElementById("org-modal-source-code")
+    const modalJoined = document.getElementById("org-modal-joined")
 
-  if (modalOverlay) {
-    modalOverlay.hidden = true;
-    modalOverlay.style.display = 'none';
-  }
-
-  function openModal(card) {
-    const name = card.dataset.name || '';
-    const type = card.dataset.type || '';
-    const status = card.dataset.status || '';
-    const description = card.dataset.description || '';
-    const website = card.dataset.website || '';
-    const donation = card.dataset.donation || '';
-    const sourceCode = card.dataset.sourceCode || '';
-    const joined = card.dataset.joinDate || 'Unknown';
-
-    modalTitle.textContent = name;
-    modalType.textContent = `${type} · ${status}`;
-    modalDescription.textContent = description;
-    modalJoined.textContent = joined;
-
-    if (website) {
-      modalWebsite.href = website;
-      modalWebsite.textContent = website.replace(/(^https?:\/\/)/, '');
-      modalWebsite.parentElement.style.display = 'block';
-    } else {
-      modalWebsite.href = '#';
-      modalWebsite.textContent = 'N/A';
-      modalWebsite.parentElement.style.display = 'block';
+    if (modalOverlay) {
+      modalOverlay.hidden = true
+      modalOverlay.style.display = "none"
     }
 
-    if (donation) {
-      modalDonation.href = donation;
-      modalDonation.textContent = 'Donate';
-      modalDonation.classList.add('donate-button');
-      modalDonation.classList.remove('disabled-link');
-    } else {
-      modalDonation.removeAttribute('href');
-      modalDonation.textContent = 'N/A';
-      modalDonation.classList.add('disabled-link');
-      modalDonation.classList.remove('donate-button');
-    }
+    function openModal(card) {
+      const name = card.dataset.name || ""
+      const type = card.dataset.type || ""
+      const status = card.dataset.status || ""
+      const description = card.dataset.description || ""
+      const website = card.dataset.website || ""
+      const donation = card.dataset.donation || ""
+      const sourceCode = card.dataset.sourceCode || ""
+      const joined = card.dataset.joinDate || "Unknown"
 
-    if (sourceCode) {
-      modalSourceCode.href = sourceCode;
-      modalSourceCode.textContent = 'Source code';
-      modalSourceCode.classList.add('source-code-link');
-      modalSourceCode.classList.remove('disabled-link');
-    } else {
-      modalSourceCode.removeAttribute('href');
-      modalSourceCode.textContent = 'N/A';
-      modalSourceCode.classList.add('disabled-link');
-      modalSourceCode.classList.remove('source-code-link');
-    }
+      modalTitle.textContent = name
+      modalType.textContent = `${type} · ${status}`
+      modalDescription.textContent = description
+      modalJoined.textContent = joined
 
-    modalOverlay.hidden = false;
-    modalOverlay.style.display = 'flex';
-    document.body.style.overflow = 'hidden';
-  }
-
-  function closeModal() {
-    modalOverlay.hidden = true;
-    modalOverlay.style.display = 'none';
-    document.body.style.overflow = '';
-  }
-
-  function filterCards() {
-    const query = searchInput.value.trim().toLowerCase();
-    cards.forEach((card) => {
-      const name = card.dataset.name.toLowerCase();
-      const type = card.dataset.type.toLowerCase();
-      const description = card.dataset.description.toLowerCase();
-      const match = !query || name.includes(query) || type.includes(query) || description.includes(query);
-      card.style.display = match ? '' : 'none';
-    });
-  }
-
-  searchInput.addEventListener('input', filterCards);
-
-  cards.forEach((card) => {
-    card.addEventListener('click', (event) => {
-      if (event.target.closest('a')) return;
-      openModal(card);
-    });
-    card.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        openModal(card);
+      if (website) {
+        modalWebsite.href = website
+        modalWebsite.textContent = website.replace(/(^https?:\/\/)/, "")
+        modalWebsite.parentElement.style.display = "block"
+      } else {
+        modalWebsite.href = "#"
+        modalWebsite.textContent = "N/A"
+        modalWebsite.parentElement.style.display = "block"
       }
-    });
-  });
 
-  modalClose.addEventListener('click', closeModal);
-  modalOverlay.addEventListener('click', (event) => {
-    if (event.target === modalOverlay) {
-      closeModal();
-    }
-  });
+      if (donation) {
+        modalDonation.href = donation
+        modalDonation.textContent = "Donate"
+        modalDonation.classList.add("donate-button")
+        modalDonation.classList.remove("disabled-link")
+      } else {
+        modalDonation.removeAttribute("href")
+        modalDonation.textContent = "N/A"
+        modalDonation.classList.add("disabled-link")
+        modalDonation.classList.remove("donate-button")
+      }
 
-  document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !modalOverlay.hidden) {
-      closeModal();
+      if (sourceCode) {
+        modalSourceCode.href = sourceCode
+        modalSourceCode.textContent = "Source code"
+        modalSourceCode.classList.add("source-code-link")
+        modalSourceCode.classList.remove("disabled-link")
+      } else {
+        modalSourceCode.removeAttribute("href")
+        modalSourceCode.textContent = "N/A"
+        modalSourceCode.classList.add("disabled-link")
+        modalSourceCode.classList.remove("source-code-link")
+      }
+
+      modalOverlay.hidden = false
+      modalOverlay.style.display = "flex"
+      document.body.style.overflow = "hidden"
     }
-  });
-})();
+
+    function closeModal() {
+      modalOverlay.hidden = true
+      modalOverlay.style.display = "none"
+      document.body.style.overflow = ""
+    }
+
+    function filterCards() {
+      const query = searchInput.value.trim().toLowerCase()
+      cards.forEach((card) => {
+        const name = card.dataset.name.toLowerCase()
+        const type = card.dataset.type.toLowerCase()
+        const description = card.dataset.description.toLowerCase()
+        const match =
+          !query ||
+          name.includes(query) ||
+          type.includes(query) ||
+          description.includes(query)
+        card.style.display = match ? "" : "none"
+      })
+    }
+
+    searchInput.addEventListener("input", filterCards)
+
+    cards.forEach((card) => {
+      card.addEventListener("click", (event) => {
+        if (event.target.closest("a")) return
+        openModal(card)
+      })
+      card.addEventListener("keydown", (event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault()
+          openModal(card)
+        }
+      })
+    })
+
+    modalClose.addEventListener("click", closeModal)
+    modalOverlay.addEventListener("click", (event) => {
+      if (event.target === modalOverlay) {
+        closeModal()
+      }
+    })
+
+    document.addEventListener("keydown", (event) => {
+      if (event.key === "Escape" && !modalOverlay.hidden) {
+        closeModal()
+      }
+    })
+  })()
 </script>
 {% endblock %}
