@@ -4,25 +4,23 @@ import datetime
 from flask import Blueprint, request, jsonify, abort, render_template, redirect, url_for, flash
 from werkzeug.exceptions import HTTPException
 from project_funding_ledger.supabase_client import get_supabase_client
+import project_funding_ledger.exceptions
 
 org_bp = Blueprint('org', __name__)
 
-def check_user_auth(client):
+def check_user_auth(client) -> tuple[str, dict | None]:
     """
     Checks if the user in the current Supabase context is authenticated.
-    Returns (user, user_profile) tuple or (None, None).
+    Returns (user, user_profile) or raises AuthRequiredError if the user isn't logged in.
     """
-    try:
-        user_res = client.auth.get_user()
-        if not user_res or not user_res.user:
-            return None, None
-        user = user_res.user
-        profile_res = client.table('user_profile').select('*').eq('auth_user_id', user.id).single().execute()
-        if not profile_res.data:
-            return user, None
-        return user, profile_res.data
-    except Exception:
-        return None, None
+    user_res = client.auth.get_user()
+    if not user_res or not user_res.user:
+        raise project_funding_ledger.exceptions.AuthRequiredError()
+    user = user_res.user
+    profile_res = client.table('user_profile').select('*').eq('auth_user_id', user.id).single().execute()
+    if not profile_res.data:
+        return user, None
+    return user, profile_res.data
 
 def get_permitted_organizations(client, user_profile):
     """

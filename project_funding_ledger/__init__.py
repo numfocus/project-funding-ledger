@@ -1,7 +1,9 @@
 import os
+import flask
 from flask import Flask, redirect, url_for
 from dotenv import load_dotenv
 from project_funding_ledger.auth import auth_bp
+import project_funding_ledger.exceptions
 from project_funding_ledger.profile import profile_bp
 from project_funding_ledger.supabase_client import save_supabase_session
 from project_funding_ledger.queue.webhooks import tasks_bp
@@ -40,27 +42,12 @@ def create_app(test_config=None):
 
     @app.route('/')
     def index():
-        # Redirect index to admin dashboard if System Administrator, else org dashboard/detail
-        from project_funding_ledger.supabase_client import get_supabase_client
-        client = get_supabase_client()
-        try:
-            user_res = client.auth.get_user()
-            user = user_res.user if user_res else None
-            if user:
-                profile_res = client.table('user_profile').select('id, user_type').eq('auth_user_id', user.id).single().execute()
-                if profile_res.data:
-                    user_type = profile_res.data.get('user_type')
-                    if user_type == 'System Administrator':
-                        return redirect(url_for('org_import.admin_dashboard'))
-                    else:
-                        user_profile_id = profile_res.data.get('id')
-                        perms_res = client.table('organization_permission').select('organization_id').eq('user_id', user_profile_id).eq('status', 'Active').execute()
-                        perms = perms_res.data or []
-                        if len(perms) == 1:
-                            return redirect(url_for('org.org_detail', org_id=perms[0]['organization_id']))
-                        return redirect(url_for('org.dashboard'))
-        except Exception:
-            pass
         return redirect(url_for('public_org.organization_list'))
+
+    @app.errorhandler(project_funding_ledger.exceptions.AuthRequiredError)
+    def auth_required(error):
+        # TODO(tswast): allow auth.login to redirect to the desired page, with protections to avoid redirecting off of the current site.
+        return redirect(url_for('auth.login'))
+        
 
     return app
