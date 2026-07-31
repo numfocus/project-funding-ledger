@@ -96,8 +96,8 @@ def dashboard():
     return render_template('dashboard.html', user_profile=profile)
 
 
-@org_bp.route('/organizations/<org_id>', methods=['GET'])
-def org_detail(org_id):
+@org_bp.route('/organizations/<uuid:org_id>', methods=['GET'])
+def org_detail(org_id: uuid.UUID):
     """
     Renders the Organization Details page for authorized users.
     """
