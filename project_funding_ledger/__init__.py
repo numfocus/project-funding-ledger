@@ -61,10 +61,6 @@ def create_app(test_config=None):
                         return redirect(url_for('org.dashboard'))
         except Exception:
             pass
-        return redirect(url_for('auth.login'))
-
-    @app.route('/hello')
-    def hello():
-        return 'Hello, World!'
+        return redirect(url_for('public_org.organization_list'))
 
     return app
