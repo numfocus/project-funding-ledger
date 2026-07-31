@@ -92,6 +92,7 @@ create trigger update_organization_updated_at
 -- Enable RLS for organization
 alter table public.organization enable row level security;
 grant select, insert, update, delete on table public.organization to authenticated, service_role;
+grant select on table public.organization to anon;
 
 -- RLS Policies for organization (Anyone can read, only admin can write)
 create policy "Allow select for anyone"

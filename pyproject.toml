@@ -11,6 +11,12 @@ dependencies = [
     "openpyxl>=3.1.0",
 ]
 
+[build-system]
+requires = ["setuptools>=77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools]
+packages = ["project_funding_ledger"]
 
 [dependency-groups]
 dev = [
@@ -19,5 +25,3 @@ dev = [
     "requests>=2.32.0",
     "pytest>=8.0.0",
 ]
-
-

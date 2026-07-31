@@ -6,7 +6,7 @@ By submitting a contribution to this project, you agree that your contribution w
 
 Install `uv`.
 
-Install `just`.
+Install `just` 1.56.0 or higher.
 
 Install Node.js and [Supabase](https://supabase.com/docs/guides/local-development).
 
