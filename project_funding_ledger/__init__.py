@@ -48,6 +48,5 @@ def create_app(test_config=None):
     def auth_required(error):
         # TODO(tswast): allow auth.login to redirect to the desired page, with protections to avoid redirecting off of the current site.
         return redirect(url_for('auth.login'))
-        
 
     return app
