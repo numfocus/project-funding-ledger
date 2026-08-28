@@ -1,0 +1,526 @@
+{% extends "base.html" %}
+
+{% block title %}My Organizations | Project Funding Ledger{% endblock %}
+
+{% block head %}
+<!-- Tailwind CSS via CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<!-- FontAwesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<!-- React 18 & ReactDOM 18 -->
+<script src="https://unpkg.com/react@18/umd/react.development.js" crossorigin></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js" crossorigin></script>
+<!-- Babel for JSX compiler -->
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    brand: {
+                        50: '#f0f9ff',
+                        100: '#e0f2fe',
+                        500: '#0ea5e9',
+                        600: '#0284c7',
+                        700: '#0369a1',
+                        800: '#075985',
+                        950: '#082f49',
+                    }
+                }
+            }
+        }
+    }
+</script>
+
+<style>
+    body {
+        background-color: #f8fafc;
+        color: #0f172a !important;
+        font-family: 'Inter', sans-serif;
+    }
+    main {
+        max-width: 100% !important;
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    input, select, textarea {
+        color: #0f172a !important;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div id="user-dashboard-root"></div>
+
+<script type="text/babel">
+{% raw %}
+    const { useState, useEffect } = React;
+
+    const USER_TYPE = "{% endraw %}{{ user_profile.user_type }}{% raw %}";
+    const USER_NAME = "{% endraw %}{{ user_profile.full_name }}{% raw %}";
+    const USER_EMAIL = "{% endraw %}{{ user_profile.email }}{% raw %}";
+
+    function UserDashboardApp() {
+        const [organizations, setOrganizations] = useState([]);
+        const [loading, setLoading] = useState(true);
+        const [error, setError] = useState(null);
+        const [searchTerm, setSearchTerm] = useState('');
+        const [statusFilter, setStatusFilter] = useState('All');
+
+        // New Org Modal State
+        const [showNewOrgModal, setShowNewOrgModal] = useState(false);
+        const [orgForm, setOrgForm] = useState({
+            organization_name: '',
+            organization_slug: '',
+            organization_type: 'Fiscal Sponsorship',
+            status: 'Active',
+            description: '',
+            website_url: '',
+            source_code_url: '',
+            donation_url: ''
+        });
+        const [modalError, setModalError] = useState(null);
+        const [submitting, setSubmitting] = useState(false);
+
+        useEffect(() => {
+            fetchOrganizations();
+        }, []);
+
+        const fetchOrganizations = async () => {
+            setLoading(true);
+            try {
+                const res = await fetch('/api/my-organizations');
+                if (res.ok) {
+                    const data = await res.json();
+                    setOrganizations(data);
+                } else {
+                    const data = await res.json();
+                    setError(data.error || 'Failed to fetch organizations.');
+                }
+            } catch (err) {
+                setError('Network error fetching organizations.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const handleNameChange = (name) => {
+            const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+            setOrgForm(prev => ({
+                ...prev,
+                organization_name: name,
+                organization_slug: slug
+            }));
+        };
+
+        const handleCreateOrg = async (e) => {
+            e.preventDefault();
+            setModalError(null);
+            setSubmitting(true);
+            try {
+                const res = await fetch('/api/organizations', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(orgForm)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    setShowNewOrgModal(false);
+                    setOrgForm({
+                        organization_name: '',
+                        organization_slug: '',
+                        organization_type: 'Fiscal Sponsorship',
+                        status: 'Active',
+                        description: '',
+                        website_url: '',
+                        source_code_url: '',
+                        donation_url: ''
+                    });
+                    fetchOrganizations();
+                } else {
+                    setModalError(data.error || 'Failed to create organization.');
+                }
+            } catch (err) {
+                setModalError('Network error creating organization.');
+            } finally {
+                setSubmitting(false);
+            }
+        };
+
+        const filteredOrgs = organizations.filter(org => {
+            const matchesSearch = 
+                org.organization_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                org.organization_slug.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                (org.description && org.description.toLowerCase().includes(searchTerm.toLowerCase()));
+            
+            const matchesStatus = statusFilter === 'All' || org.status === statusFilter;
+            return matchesSearch && matchesStatus;
+        });
+
+        const canCreateOrg = USER_TYPE === 'Program Manager' || USER_TYPE === 'System Administrator';
+
+        return (
+            <div className="min-h-screen flex flex-col bg-slate-50">
+                {/* Header Nav */}
+                <header className="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+                        <div className="flex items-center gap-3">
+                            <div className="bg-brand-950 text-white p-2 rounded-lg flex items-center justify-center">
+                                <i className="fa-solid fa-wallet text-xl"></i>
+                            </div>
+                            <div>
+                                <span className="font-bold text-xl text-slate-800 tracking-tight block">Project Funding Ledger</span>
+                            </div>
+                        </div>
+
+                        <nav className="flex items-center gap-6">
+                            <a href="/dashboard" className="text-brand-700 border-b-2 border-brand-600 text-sm font-semibold py-2 flex items-center gap-1.5">
+                                <i className="fa-solid fa-building-ngo"></i> My Orgs
+                            </a>
+                            <a href="/profile" className="text-slate-500 hover:text-slate-800 text-sm font-semibold flex items-center gap-1.5 transition">
+                                <i className="fa-solid fa-user-circle text-lg"></i> Profile
+                            </a>
+                            <a href="/logout" className="text-rose-600 hover:text-rose-800 text-sm font-semibold flex items-center gap-1.5 transition ml-2">
+                                <i className="fa-solid fa-right-from-bracket"></i> Logout
+                            </a>
+                        </nav>
+                    </div>
+                </header>
+
+                {/* Dashboard Main Content */}
+                <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Welcome Banner */}
+                    <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8 bg-gradient-to-r from-brand-950 to-brand-800 text-white p-6 rounded-2xl shadow-md">
+                        <div>
+                            <div className="flex items-center gap-3">
+                                <h1 className="text-2xl font-extrabold tracking-tight">Welcome, {USER_NAME}</h1>
+                                <span className="bg-brand-700/80 text-brand-50 border border-brand-500 text-xs px-3 py-1 rounded-full font-medium">
+                                    {USER_TYPE}
+                                </span>
+                            </div>
+                            <p className="text-brand-100 text-sm mt-1">
+                                Organizations for which you have permission in Project Funding Ledger.
+                            </p>
+                        </div>
+                        {canCreateOrg && (
+                            <button
+                                onClick={() => setShowNewOrgModal(true)}
+                                className="bg-brand-500 hover:bg-brand-600 text-white font-semibold px-5 py-2.5 rounded-xl shadow transition flex items-center justify-center gap-2 self-start md:self-auto text-sm"
+                            >
+                                <i className="fa-solid fa-plus text-base"></i> New Organization
+                            </button>
+                        )}
+                    </div>
+
+                    {/* Stats Summary */}
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Permitted Orgs</span>
+                                <h3 className="text-3xl font-extrabold text-slate-800 mt-1">{organizations.length}</h3>
+                            </div>
+                            <div className="bg-brand-50 text-brand-600 p-3.5 rounded-xl">
+                                <i className="fa-solid fa-[#0ea5e9] fa-building text-2xl"></i>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Fiscal Sponsorships</span>
+                                <h3 className="text-3xl font-extrabold text-slate-800 mt-1">
+                                    {organizations.filter(o => o.organization_type === 'Fiscal Sponsorship').length}
+                                </h3>
+                            </div>
+                            <div className="bg-emerald-50 text-emerald-600 p-3.5 rounded-xl">
+                                <i className="fa-solid fa-handshake-angle text-2xl"></i>
+                            </div>
+                        </div>
+
+                        <div className="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center justify-between">
+                            <div>
+                                <span className="text-slate-400 text-xs font-semibold uppercase tracking-wider">Events</span>
+                                <h3 className="text-3xl font-extrabold text-slate-800 mt-1">
+                                    {organizations.filter(o => o.organization_type === 'Event').length}
+                                </h3>
+                            </div>
+                            <div className="bg-indigo-50 text-indigo-600 p-3.5 rounded-xl">
+                                <i className="fa-solid fa-calendar-check text-2xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Controls Bar: Search & Filter */}
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                        <div className="relative flex-1 max-w-md">
+                            <i className="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input
+                                type="text"
+                                placeholder="Search by name, slug, description..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-slate-200 bg-white focus:outline-none focus:ring-2 focus:ring-brand-500 shadow-sm text-sm"
+                            />
+                        </div>
+                        <div className="flex items-center gap-3">
+                            <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Filter Status:</label>
+                            <select
+                                value={statusFilter}
+                                onChange={(e) => setStatusFilter(e.target.value)}
+                                className="px-3.5 py-2 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 shadow-sm focus:outline-none focus:ring-2 focus:ring-brand-500"
+                            >
+                                <option value="All">All Statuses</option>
+                                <option value="Active">Active</option>
+                                <option value="Inactive">Inactive</option>
+                                <option value="Archived">Archived</option>
+                                <option value="Dormant">Dormant</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    {/* Organizations List */}
+                    {loading ? (
+                        <div className="py-16 text-center text-slate-400">
+                            <i className="fa-solid fa-circle-notch fa-spin text-3xl mb-3 text-brand-600"></i>
+                            <p className="text-sm font-medium">Loading organizations...</p>
+                        </div>
+                    ) : error ? (
+                        <div className="bg-rose-50 border border-rose-200 text-rose-700 p-4 rounded-xl text-sm mb-6 flex items-center gap-2">
+                            <i className="fa-solid fa-triangle-exclamation text-base"></i>
+                            <span>{error}</span>
+                        </div>
+                    ) : filteredOrgs.length > 0 ? (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            {filteredOrgs.map(org => (
+                                <div key={org.id} className="bg-white rounded-2xl border border-slate-200/90 shadow-sm hover:shadow-md transition duration-200 flex flex-col justify-between overflow-hidden">
+                                    <div className="p-6">
+                                        <div className="flex items-start justify-between gap-3 mb-3">
+                                            <div>
+                                                <h3 className="text-lg font-bold text-slate-800 leading-snug">{org.organization_name}</h3>
+                                                <span className="text-xs font-mono text-slate-400">slug: {org.organization_slug}</span>
+                                            </div>
+                                            <span className={`shrink-0 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold ${
+                                                org.status === 'Active' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200'
+                                            }`}>
+                                                <span className={`h-1.5 w-1.5 rounded-full ${org.status === 'Active' ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
+                                                {org.status}
+                                            </span>
+                                        </div>
+
+                                        <div className="flex items-center gap-2 mb-3 flex-wrap">
+                                            <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-brand-50 text-brand-700 border border-brand-100">
+                                                {org.organization_type}
+                                            </span>
+                                            {org.permission_level && (
+                                                <span className="px-2.5 py-0.5 rounded-md text-xs font-medium bg-indigo-50 text-indigo-700 border border-indigo-100 flex items-center gap-1">
+                                                    <i className="fa-solid fa-key text-[10px]"></i> {org.permission_level}
+                                                </span>
+                                            )}
+                                        </div>
+
+                                        <p className="text-slate-600 text-sm line-clamp-3 mb-4 min-h-[3rem]">
+                                            {org.description || <em className="text-slate-400 font-normal">No description provided.</em>}
+                                        </p>
+
+                                        {/* Links preview */}
+                                        <div className="flex items-center gap-3 text-slate-400 text-xs pt-3 border-t border-slate-100">
+                                            {org.website_url && (
+                                                <a href={org.website_url} target="_blank" rel="noreferrer" className="hover:text-brand-600 flex items-center gap-1" title="Website">
+                                                    <i className="fa-solid fa-globe"></i> Website
+                                                </a>
+                                            )}
+                                            {org.source_code_url && (
+                                                <a href={org.source_code_url} target="_blank" rel="noreferrer" className="hover:text-brand-600 flex items-center gap-1" title="Source Code">
+                                                    <i className="fa-brands fa-github"></i> Repository
+                                                </a>
+                                            )}
+                                            {org.donation_url && (
+                                                <a href={org.donation_url} target="_blank" rel="noreferrer" className="hover:text-brand-600 flex items-center gap-1" title="Donation">
+                                                    <i className="fa-solid fa-heart text-rose-500"></i> Donate
+                                                </a>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+                                        <span className="text-xs text-slate-400 font-medium">Joined: {org.join_date || 'N/A'}</span>
+                                        <a
+                                            href={`/organizations/${org.id}`}
+                                            className="bg-brand-700 hover:bg-brand-800 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition flex items-center gap-1.5"
+                                        >
+                                            View Details <i className="fa-solid fa-chevron-right text-[10px]"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center text-slate-400 max-w-lg mx-auto shadow-sm">
+                            <div className="bg-slate-100 text-slate-400 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 text-2xl">
+                                <i className="fa-solid fa-building-circle-xmark"></i>
+                            </div>
+                            <h3 className="text-lg font-bold text-slate-700 mb-1">No Organizations Found</h3>
+                            <p className="text-sm text-slate-500 mb-6">
+                                {organizations.length === 0 
+                                    ? "You have not been granted permissions to any organization yet. Please contact a System Administrator."
+                                    : "No organizations matched your search criteria."}
+                            </p>
+                            {canCreateOrg && (
+                                <button
+                                    onClick={() => setShowNewOrgModal(true)}
+                                    className="bg-brand-700 hover:bg-brand-800 text-white font-semibold px-4 py-2 rounded-xl text-sm transition inline-flex items-center gap-2"
+                                >
+                                    <i className="fa-solid fa-plus"></i> Create Organization
+                                </button>
+                            )}
+                        </div>
+                    )}
+                </main>
+
+                {/* New Organization Modal */}
+                {showNewOrgModal && (
+                    <div className="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+                        <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 my-8">
+                            <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                                <h3 className="text-lg font-bold text-slate-800">Create New Organization</h3>
+                                <button
+                                    onClick={() => setShowNewOrgModal(false)}
+                                    className="text-slate-400 hover:text-slate-600 text-lg p-1"
+                                >
+                                    <i className="fa-solid fa-xmark"></i>
+                                </button>
+                            </div>
+
+                            {modalError && (
+                                <div className="bg-rose-50 border border-rose-200 text-rose-700 text-xs p-3 rounded-lg mb-4 flex items-center gap-2">
+                                    <i className="fa-solid fa-triangle-exclamation"></i>
+                                    <span>{modalError}</span>
+                                </div>
+                            )}
+
+                            <form onSubmit={handleCreateOrg} className="space-y-4 text-sm">
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Organization Name *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="e.g. Pandas Data Science Project"
+                                        value={orgForm.organization_name}
+                                        onChange={(e) => handleNameChange(e.target.value)}
+                                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Organization Slug *</label>
+                                    <input
+                                        type="text"
+                                        required
+                                        placeholder="pandas-data-science"
+                                        value={orgForm.organization_slug}
+                                        onChange={(e) => setOrgForm({ ...orgForm, organization_slug: e.target.value })}
+                                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-slate-50 font-mono text-xs focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Type</label>
+                                        <select
+                                            value={orgForm.organization_type}
+                                            onChange={(e) => setOrgForm({ ...orgForm, organization_type: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                        >
+                                            <option value="Fiscal Sponsorship">Fiscal Sponsorship</option>
+                                            <option value="Event">Event</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Status</label>
+                                        <select
+                                            value={orgForm.status}
+                                            onChange={(e) => setOrgForm({ ...orgForm, status: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                        >
+                                            <option value="Active">Active</option>
+                                            <option value="Inactive">Inactive</option>
+                                            <option value="Archived">Archived</option>
+                                            <option value="Dormant">Dormant</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Description</label>
+                                    <textarea
+                                        rows="3"
+                                        placeholder="Brief description of the organization..."
+                                        value={orgForm.description}
+                                        onChange={(e) => setOrgForm({ ...orgForm, description: e.target.value })}
+                                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none"
+                                    ></textarea>
+                                </div>
+
+                                <div>
+                                    <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Website URL</label>
+                                    <input
+                                        type="url"
+                                        placeholder="https://example.org"
+                                        value={orgForm.website_url}
+                                        onChange={(e) => setOrgForm({ ...orgForm, website_url: e.target.value })}
+                                        className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-xs"
+                                    />
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Source Code URL</label>
+                                        <input
+                                            type="url"
+                                            placeholder="https://github.com/..."
+                                            value={orgForm.source_code_url}
+                                            onChange={(e) => setOrgForm({ ...orgForm, source_code_url: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-xs"
+                                        />
+                                    </div>
+                                    <div>
+                                        <label className="block text-xs font-semibold text-slate-600 uppercase mb-1">Donation URL</label>
+                                        <input
+                                            type="url"
+                                            placeholder="https://numfocus.org/donate"
+                                            value={orgForm.donation_url}
+                                            onChange={(e) => setOrgForm({ ...orgForm, donation_url: e.target.value })}
+                                            className="w-full px-3.5 py-2 border border-slate-200 rounded-xl bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none text-xs"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="flex items-center justify-end gap-3 pt-4 border-t border-slate-100">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowNewOrgModal(false)}
+                                        className="px-4 py-2 rounded-xl text-slate-600 hover:bg-slate-100 font-semibold transition text-xs"
+                                    >
+                                        Cancel
+                                    </button>
+                                    <button
+                                        type="submit"
+                                        disabled={submitting}
+                                        className="px-5 py-2 rounded-xl bg-brand-700 hover:bg-brand-800 text-white font-semibold shadow transition text-xs flex items-center gap-1.5 disabled:opacity-50"
+                                    >
+                                        {submitting && <i className="fa-solid fa-spinner fa-spin"></i>}
+                                        Save Organization
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                )}
+            </div>
+        );
+    }
+
+    ReactDOM.createRoot(document.getElementById('user-dashboard-root')).render(<UserDashboardApp />);
+{% endraw %}
+</script>
+{% endblock %}

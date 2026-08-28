@@ -63,7 +63,17 @@ def login():
                 if user_type == 'System Administrator':
                     return redirect(url_for('org_import.admin_dashboard'))
                 else:
-                    return redirect(url_for('profile.profile_page'))
+                    try:
+                        profile_res = client.table('user_profile').select('id').eq('auth_user_id', res.user.id).single().execute()
+                        if profile_res.data:
+                            user_profile_id = profile_res.data['id']
+                            perms_res = client.table('organization_permission').select('organization_id').eq('user_id', user_profile_id).eq('status', 'Active').execute()
+                            perms = perms_res.data or []
+                            if len(perms) == 1:
+                                return redirect(url_for('org.org_detail', org_id=perms[0]['organization_id']))
+                    except Exception:
+                        pass
+                    return redirect(url_for('org.dashboard'))
         except Exception as e:
             flash(f"Login failed: {str(e)}", "error")
             
@@ -206,7 +216,17 @@ def register():
                         if user_type == 'System Administrator':
                             return redirect(url_for('org_import.admin_dashboard'))
                         else:
-                            return redirect(url_for('profile.profile_page'))
+                            try:
+                                profile_res = client.table('user_profile').select('id').eq('auth_user_id', signup_res.user.id).single().execute()
+                                if profile_res.data:
+                                    user_profile_id = profile_res.data['id']
+                                    perms_res = client.table('organization_permission').select('organization_id').eq('user_id', user_profile_id).eq('status', 'Active').execute()
+                                    perms = perms_res.data or []
+                                    if len(perms) == 1:
+                                        return redirect(url_for('org.org_detail', org_id=perms[0]['organization_id']))
+                            except Exception:
+                                pass
+                            return redirect(url_for('org.dashboard'))
                     else:
                         flash("Registration successful! Please check your email for a confirmation link.", "success")
                         return redirect(url_for('auth.login'))

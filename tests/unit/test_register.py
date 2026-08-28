@@ -86,7 +86,7 @@ def test_register_complete_registration_success(mock_get_supabase, client):
             'confirm_password': 'password123'
         })
         
-        # Verify redirect to profile page (since we automatically log in on success)
+        # Verify redirect to dashboard (since we automatically log in on success)
         assert response.status_code == 302
-        assert response.location.endswith('/profile')
+        assert response.location.endswith('/dashboard')
         assert mock_log.called

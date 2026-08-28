@@ -32,6 +32,10 @@ def test_sync_task_queue():
 
 # Test client factory when Celery is not available (or is)
 def test_queue_client_factory():
+    # Reset client cache to allow provider testing
+    import project_funding_ledger.queue.client
+    project_funding_ledger.queue.client._client_instance = None
+    
     # If we set provider to sync, it should return SyncTaskQueue
     with patch.dict(os.environ, {"QUEUE_PROVIDER": "sync"}):
         client = get_queue_client()
