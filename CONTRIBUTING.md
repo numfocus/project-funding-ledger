@@ -4,7 +4,11 @@ By submitting a contribution to this project, you agree that your contribution w
 
 ## Development
 
-Install `uv`.
+Install `uv` and initialize it.
+
+```
+uv sync
+```
 
 Install `just` 1.56.0 or higher.
 
